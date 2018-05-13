@@ -1,9 +1,14 @@
-no buffer, but does pixel-by-pixel update
-really slow
-minimalistic
-optimized for size
-for small devices with minimal resources
+FEATURES
+ * no buffer, but does pixel-by-pixel update
+ * really slow
+ * minimalistic
+ * optimized for size
+ * for small devices with minimal resources
 
+LINKS
+ * https://playground.arduino.cc/Main/SoftwareI2CLibrary
+ * https://github.com/notisrac/TinyPrint
 
-https://playground.arduino.cc/Main/SoftwareI2CLibrary
-https://github.com/notisrac/TinyPrint
+TODO
+  * Add draw functions (line, ciricle, etc.)
+  * Drawing a bitmap should be done by one segment a time, while keeping the same readmodifywrite session - this should improve speed
