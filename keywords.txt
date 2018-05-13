@@ -1,0 +1,15 @@
+SH1106Lib	KEYWORD1
+SH1106Lib	KEYWORD2
+initialize	KEYWORD2
+sendCommand	KEYWORD2
+sendData	KEYWORD2
+clearDisplay	KEYWORD2
+drawBitmap	KEYWORD2
+drawPixel	KEYWORD2
+setCursor	KEYWORD2
+resetCursor	KEYWORD2
+setFont	KEYWORD2
+setTextWrap	KEYWORD2
+setTextColor	KEYWORD2
+write	KEYWORD2
+drawChar	KEYWORD2
