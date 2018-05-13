@@ -163,7 +163,7 @@ void SH1106Lib::clearDisplay(void)
 	h: the height of the image
 	color: the color which the image should be displayed
 */
-void SH1106Lib::drawBitmap(uint8_t x, uint8_t y, const byte * bitmap, uint8_t w, uint8_t h, uint8_t color)
+void SH1106Lib::drawBitmap(uint8_t x, uint8_t y, const byte * bitmap, uint8_t w, uint8_t h, uint8_t color, uint8_t bgcolor)
 {
 	if (w > SH1106_LCDWIDTH || h > SH1106_LCDHEIGHT)
 	{ // sanity check
@@ -171,13 +171,30 @@ void SH1106Lib::drawBitmap(uint8_t x, uint8_t y, const byte * bitmap, uint8_t w,
 	}
 
 	uint8_t i, j;
-	uint8_t byteWidth = (w + 7) / 8;
+	uint8_t bitMask = 128;
+	uint8_t actualByte = 0x00;
+	bool bit = false;
 
 	for (j = 0; j < h; j++) {
 		for (i = 0; i < w; i++) {
-			if (pgm_read_byte(bitmap + j * byteWidth + i / 8) & (128 >> (i & 7))) {
+			actualByte = pgm_read_byte(bitmap + (((j * w) + i) / 8));
+			bit = actualByte & bitMask;
+
+			if (bit)
+			{
 				drawPixel(x + i, y + j, color);
 			}
+			else if (bgcolor != TRANSPARENT)
+			{
+				drawPixel(x + i, y + j, bgcolor);
+			}
+
+			bitMask >>= 1;
+			if (!bitMask)
+			{
+				bitMask = 128;
+			}
+
 		}
 	}
 }
@@ -206,7 +223,7 @@ void SH1106Lib::drawPixel(uint8_t x, uint8_t y, uint8_t color)
 	_beginTransmission(I2CREAD, false); // restart in read mode
 	i2c_read(false); // dummy read
 	byte b = i2c_read(true);
-	Serial.println(b, BIN);
+	//Serial.println(b, BIN);
 	if (WHITE == color)
 	{
 		b |= (1 << (y & 7));
@@ -352,6 +369,14 @@ void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color,
 */
 void SH1106Lib::_setDisplayWritePosition(uint8_t x, uint8_t y, bool useOwnTransmission = false)
 {
+	if (x == _pixelPosX && ((y >> 3) == _pixelPosY))
+	{
+		return;
+	}
+
+	_pixelPosX = x;
+	_pixelPosY = y >>3;
+
 	// the SH1106 display starts at x = 2! (there are two columns of off screen pixels)
 	x += 2;
 

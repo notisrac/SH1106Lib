@@ -1,6 +1,3 @@
-// TODO use this instead of wiring: https://playground.arduino.cc/Main/SoftwareI2CLibrary !!!!!! - test first for speed
-// TODO make a library out of this!
-
 /***************************************************************************
   This is a library for the SH1106 I2C OLED display
   These displays use I2C to communicate, 2 pins are required to  interface
@@ -20,13 +17,13 @@
 
 #define I2C_HARDWARE 1
 #define I2C_TIMEOUT 10
+#define I2C_MAXWAIT 10
 #define I2C_PULLUP 1
 #define I2C_FASTMODE 1
 #define SDA_PORT PORTC
 #define SDA_PIN 4 // = A4
 #define SCL_PORT PORTC
 #define SCL_PIN 5 // = A5
- //#include <Wire.h>
 
 // region display_constants
 #define SH1106_I2C_ADDRESS   0x3C // 011110+SA0+RW - 0x3C or 0x3D
@@ -105,7 +102,7 @@ public:
 	void sendData(byte *data, uint8_t count, bool useOwnTransmission = true);
 
 	void clearDisplay(void);
-	void drawBitmap(uint8_t x, uint8_t y, const byte *bitmap, uint8_t w, uint8_t h, uint8_t color);
+	void drawBitmap(uint8_t x, uint8_t y, const byte *bitmap, uint8_t w, uint8_t h, uint8_t color, uint8_t bgcolor);
 	void drawPixel(uint8_t x, uint8_t y, uint8_t color);
 
 	void setCursor(uint8_t x, uint8_t y);
@@ -131,6 +128,9 @@ private:
 	bool _wrap = true;
 	const unsigned char* _font;
 
+	uint8_t _pixelPosX = 0;
+	uint8_t _pixelPosY = 0;
+
 	// i2c vars
 	bool _i2cTransmissionInProgress = false;
 };
@@ -139,50 +139,50 @@ private:
 
 /*
 Empty:
-Program LedTester size: 4 544 bytes (used 14% of a 32 256 byte maximum) (1,05 secs)
+Program LedTester size: 4ï¿½544 bytes (used 14% of a 32ï¿½256 byte maximum) (1,05 secs)
 Minimum Memory Usage: 317 bytes (15% of a 2048 byte maximum)
 
 D
-Program LedTester size: 4 604 bytes (used 14% of a 32 256 byte maximum) (1,08 secs)
+Program LedTester size: 4ï¿½604 bytes (used 14% of a 32ï¿½256 byte maximum) (1,08 secs)
 Minimum Memory Usage: 333 bytes (16% of a 2048 byte maximum)
 
-Program LedTester size: 4 680 bytes (used 15% of a 32 256 byte maximum) (1,13 secs)
+Program LedTester size: 4ï¿½680 bytes (used 15% of a 32ï¿½256 byte maximum) (1,13 secs)
 Minimum Memory Usage: 327 bytes (16% of a 2048 byte maximum)
 
 D : TP
-Program LedTester size: 4 746 bytes (used 15% of a 32 256 byte maximum) (1,19 secs)
+Program LedTester size: 4ï¿½746 bytes (used 15% of a 32ï¿½256 byte maximum) (1,19 secs)
 Minimum Memory Usage: 327 bytes (16% of a 2048 byte maximum)
 
 D : P
-Program LedTester size: 4 668 bytes (used 14% of a 32 256 byte maximum) (1,13 secs)
+Program LedTester size: 4ï¿½668 bytes (used 14% of a 32ï¿½256 byte maximum) (1,13 secs)
 Minimum Memory Usage: 3	7 bytes (16% of a 2048 byte maximum)
 
 lib + tinyp
-Program LedTester size: 4 660 bytes (used 14% of a 32 256 byte maximum) (2,04 secs)
+Program LedTester size: 4ï¿½660 bytes (used 14% of a 32ï¿½256 byte maximum) (2,04 secs)
 Minimum Memory Usage: 331 bytes (16% of a 2048 byte maximum)
 
 
-Program LedTester size: 5 074 bytes (used 16% of a 32 256 byte maximum) (1,10 secs)
+Program LedTester size: 5ï¿½074 bytes (used 16% of a 32ï¿½256 byte maximum) (1,10 secs)
 Minimum Memory Usage: 331 bytes (16% of a 2048 byte maximum)
 
 lib + tinyp 2018.03.25
-Program LedTester size: 3 720 bytes (used 12% of a 32 256 byte maximum) (0,96 secs)
+Program LedTester size: 3ï¿½720 bytes (used 12% of a 32ï¿½256 byte maximum) (0,96 secs)
 Minimum Memory Usage: 219 bytes (11% of a 2048 byte maximum)
 
 lib nobuffer + tinyp 2018.04.15
-Program LedTester size: 5 478 bytes (used 17% of a 32 256 byte maximum) (1,06 secs)
+Program LedTester size: 5ï¿½478 bytes (used 17% of a 32ï¿½256 byte maximum) (1,06 secs)
 Minimum Memory Usage: 236 bytes (12% of a 2048 byte maximum)
 
 lib nobuffer + tinyp 2018.04.15
-Program LedTester size: 6 650 bytes (used 21% of a 32 256 byte maximum) (1,37 secs)
+Program LedTester size: 6ï¿½650 bytes (used 21% of a 32ï¿½256 byte maximum) (1,37 secs)
 Minimum Memory Usage: 238 bytes (12% of a 2048 byte maximum)
 
 lib nobuffer + print 2018.04.15
-Program LedTester size: 6 574 bytes (used 20% of a 32 256 byte maximum) (1,30 secs)
+Program LedTester size: 6ï¿½574 bytes (used 20% of a 32ï¿½256 byte maximum) (1,30 secs)
 Minimum Memory Usage: 244 bytes (12% of a 2048 byte maximum)
 
 lib nobuffer + tinyprint + softi2cmaster 2018.05.01
-Program LedTester size: 6 696 bytes (used 21% of a 32 256 byte maximum) (0,68 secs)
+Program LedTester size: 6 696 bytes (used 21% of a 32ï¿½256 byte maximum) (0,68 secs)
 Minimum Memory Usage: 208 bytes (10% of a 2048 byte maximum)
 
 */
