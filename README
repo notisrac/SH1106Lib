@@ -1,0 +1,9 @@
+no buffer, but does pixel-by-pixel update
+really slow
+minimalistic
+optimized for size
+for small devices with minimal resources
+
+
+https://playground.arduino.cc/Main/SoftwareI2CLibrary
+https://github.com/notisrac/TinyPrint
