@@ -265,12 +265,15 @@ void SH1106Lib::resetCursor()
 	font: pinter to the array containing the font
 	width: the width of the font in pixels
 	height: the height of the font in pixels
+	offset: signed value to offset the position the character is found in the font
 */
-void SH1106Lib::setFont(const unsigned char *font, uint8_t width, uint8_t height)
+void SH1106Lib::setFont(const unsigned char *font, uint8_t width, uint8_t height, int8_t offset = 0, bool useBlankAsSpace = false)
 {
 	_font = font;
 	_fontWidth = width;
 	_fontHeight = height;
+	_fontOffset = offset;
+	_fontUseBlankAsSpace = useBlankAsSpace;
 }
 
 /*
@@ -301,6 +304,7 @@ void SH1106Lib::setTextColor(uint8_t color, uint8_t backColor)
 */
 byte SH1106Lib::write(uint8_t c)
 {
+	Serial.print("%");
 	if (c == '\n') { // on a linebreak move the cursor down one line, and back to the start
 		setCursor(0, _cursorY + _fontHeight);
 	}
@@ -321,6 +325,29 @@ byte SH1106Lib::write(uint8_t c)
 	return 1;
 }
 
+
+char* printBits(byte myByte) {
+	static char str[9];
+	byte mask = 0x80;
+
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		if (mask & myByte)
+		{
+			str[i] = '1';
+		}
+		else
+		{
+			str[i] = '0';
+		}
+		mask >>= 1;
+	}
+	str[8] = '\0';
+
+	return str;
+}
+
+
 /*
 	Draws a character on the screen from the font
 	x: x coordinate where the character should be displayed
@@ -336,27 +363,36 @@ void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color,
 		((y + _fontHeight) < 0))   // Clip top
 		return;
 
-	uint8_t line, i, j;
+	uint8_t line, i, j, k;
+	// how many bytes does one column of the font takes up
+	uint8_t byteWidth = ceil((float)_fontHeight / 8);
 
-	for (i = 0; i < (_fontWidth + 1)/*6*/; i++) {
-		if (i == _fontWidth/*5*/) {
-			line = 0x00;
-		}
-		else {
-			line = pgm_read_byte(_font + (character * _fontWidth/*5*/) + i);
-		}
-		for (j = 0; j < (_fontHeight + 1)/*8*/; j++) { // draw all the bits from the current line of the char
-			if (line & 0x1) { // if the current bit(pixel) is a 1, then plot a color pixel
-				drawPixel(x + i, y + j, color);
+	for (i = 0; i < (_fontWidth + 1); i++) {
+		for (k = 0; k < byteWidth; k++)
+		{ // if the fon is taller than 8
+			if (i == _fontWidth || (character == ' ' && _fontUseBlankAsSpace)) {
+				line = 0x00;
 			}
-			else { // otherwise plot a black pixel
-				if (TRANSPARENT != backgroundColor)
-				{
-					drawPixel(x + i, y + j, backgroundColor);
+			else {
+				// <the locaton of the font in memory> + 
+				// (<the character code> - <the offset (if the fontset is not complete)>) * <width of the font>
+				// 
+				line = pgm_read_byte(_font + (((character - _fontOffset) * _fontWidth) + i)*byteWidth + k);
+			}
+
+			for (j = k * 8; j < min(k * 8 + 8, _fontHeight + 1); j++) { // draw all the bits from the current line of the char
+				if (line & 0x1) { // if the current bit(pixel) is a 1, then plot a color pixel
+					drawPixel(x + i, y + j, color);
 				}
+				else { // otherwise plot a black pixel
+					if (TRANSPARENT != backgroundColor)
+					{
+						drawPixel(x + i, y + j, backgroundColor);
+					}
+				}
+				// shift right to get the next bit(pixel)
+				line >>= 1;
 			}
-			// shift right to get the next bit(pixel)
-			line >>= 1;
 		}
 	}
 }

@@ -107,7 +107,7 @@ public:
 
 	void setCursor(uint8_t x, uint8_t y);
 	void resetCursor();
-	void setFont(const unsigned char *font, uint8_t width, uint8_t height);
+	void setFont(const unsigned char *font, uint8_t width, uint8_t height, int8_t offset = 0, bool useBlankAsSpace = false);
 	void setTextWrap(bool enableWrap);
 	void setTextColor(uint8_t color, uint8_t backColor);
 	// Inherited via TinyPrint
@@ -125,6 +125,8 @@ private:
 	uint8_t _backgroundColor = TRANSPARENT;
 	uint8_t _fontWidth = 5;
 	uint8_t _fontHeight = 8;
+	int8_t _fontOffset = 0;
+	bool _fontUseBlankAsSpace = false;
 	bool _wrap = true;
 	const unsigned char* _font;
 
