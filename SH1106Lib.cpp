@@ -154,6 +154,80 @@ void SH1106Lib::clearDisplay(void)
 	_endTransmission();
 }
 
+unsigned char reverse(unsigned char b) {
+	b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+	b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+	b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+	return b;
+}
+
+char* printBits(byte myByte) {
+	static char str[9];
+	byte mask = 0x80;
+
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		if (mask & myByte)
+		{
+			str[i] = '1';
+		}
+		else
+		{
+			str[i] = '0';
+		}
+		mask >>= 1;
+	}
+	str[8] = '\0';
+
+	return str;
+}
+
+void SH1106Lib::fillRect(uint8_t left, uint8_t top, uint8_t width, uint8_t height, uint8_t color)
+{
+	// sanity check
+	if (left > SH1106_LCDWIDTH || top > SH1106_LCDHEIGHT)
+	{
+		return;
+	}
+	if (left + width > SH1106_LCDWIDTH)
+	{
+		width = SH1106_LCDWIDTH - left;
+	}
+	if (top + height > SH1106_LCDHEIGHT)
+	{
+		height = SH1106_LCDHEIGHT - top - 1;
+	}
+
+	uint8_t i, j = 0;
+	byte maskStart, maskEnd = B00000000;
+
+	// calculate the start and the end masks
+	maskStart = B11111111 << ((top % 8));
+	maskEnd = ~(B11111111 << ((top + height) % 8) + 1);
+
+	if (height <= 8 && (floor(top / 8) == floor((top + height) / 8)))
+	{ // smaller than a page, so combine the start and the end mask
+		maskStart = maskStart & maskEnd;
+	}
+	else
+	{
+		// write the end mask to the last page it touches
+		_drawColumns(left, top + height, maskEnd, width, color);
+	}
+
+	// write the start mask
+	_drawColumns(left, top, maskStart, width, color);
+
+	if (height > 8)
+	{ // larger than 8
+		// loop through the inner parts
+		for (i = top + (8 - (top % 8)); i < top + height - ((top + height) % 8); i += 8)
+		{
+			_drawColumns(left, i, B11111111, width, color);
+		}
+	}
+}
+
 /*
 	Draws a bitmap from the program memory to the display
 	x: the x coordinate to put the bitmap
@@ -326,28 +400,6 @@ byte SH1106Lib::write(uint8_t c)
 }
 
 
-char* printBits(byte myByte) {
-	static char str[9];
-	byte mask = 0x80;
-
-	for (uint8_t i = 0; i < 8; i++)
-	{
-		if (mask & myByte)
-		{
-			str[i] = '1';
-		}
-		else
-		{
-			str[i] = '0';
-		}
-		mask >>= 1;
-	}
-	str[8] = '\0';
-
-	return str;
-}
-
-
 /*
 	Draws a character on the screen from the font
 	x: x coordinate where the character should be displayed
@@ -464,4 +516,53 @@ void SH1106Lib::_endTransmission()
 {
 	i2c_stop();
 	_i2cTransmissionInProgress = false;
+}
+
+void SH1106Lib::_startRMWMode(uint8_t x, uint8_t y)
+{
+	_beginTransmission(I2CWRITE, true);
+
+	// set the position and enable the readmodifywrite mode
+	_setDisplayWritePosition(x, y, false);
+	sendCommand(SH1106_READMODIFYWRITE_START, false);
+	i2c_write(0xC0); // ???? 
+}
+
+void SH1106Lib::_stopRMWMode()
+{
+	// end the readmodifywrite mode
+	sendCommand(SH1106_READMODIFYWRITE_END, false);
+	_endTransmission();
+}
+
+void SH1106Lib::_drawColumn(uint8_t data, uint8_t color)
+{
+	byte b = data;
+	// read the pixel data from the display
+	_beginTransmission(I2CREAD, false); // restart in read mode
+	i2c_read(false); // dummy read
+	b = i2c_read(true);
+	//b |= data;
+	//	b &= ~(1 << (y & 7));
+	if (WHITE == color)
+	{
+		b |= data;
+	}
+	else
+	{
+		b &= ~data;
+	}
+
+	// write the modified data back
+	sendData(b, false);
+}
+
+void SH1106Lib::_drawColumns(uint8_t x, uint8_t y, uint8_t data, uint8_t count, uint8_t color)
+{
+	_startRMWMode(x, y);
+	for (uint8_t i = 0; i < count; i++)
+	{
+		_drawColumn(data, color);
+	}
+	_stopRMWMode();
 }

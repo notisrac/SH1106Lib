@@ -102,6 +102,7 @@ public:
 	void sendData(byte *data, uint8_t count, bool useOwnTransmission = true);
 
 	void clearDisplay(void);
+	void fillRect(uint8_t left, uint8_t top, uint8_t width, uint8_t height, uint8_t color);
 	void drawBitmap(uint8_t x, uint8_t y, const byte *bitmap, uint8_t w, uint8_t h, uint8_t color, uint8_t bgcolor);
 	void drawPixel(uint8_t x, uint8_t y, uint8_t color);
 
@@ -117,6 +118,41 @@ private:
 	void _setDisplayWritePosition(uint8_t x, uint8_t y, bool useOwnTransmission = false);
 	void _beginTransmission(byte operation = I2CWRITE, bool startNewTransmission = false);
 	void _endTransmission();
+	/**
+		Moves the display write position, and starts the ReadModifyWrite mode
+
+		@param x The x coordinate 0..127 (this will select column)
+		@param y The y coordinate 0..63 (this will select the page - will be converted to page number)
+		@returns nothing
+	*/
+	void _startRMWMode(uint8_t x, uint8_t y);
+	/**
+		Sopts the ReadModifyWrite mode
+
+		@returns nothing
+	*/
+	void _stopRMWMode();
+	/**
+		Draws a single column (8bits vertically) on the current page.
+		Note: the ReadModifyWrite must be enabled for this to work
+
+		@param data The byte that will be output to the column
+		@param color The color that the 1 pixels is displayed should be black or whit - ANDs or ORs the data to the pixels on the screen
+		@returns nothing
+	*/
+	void _drawColumn(uint8_t data, uint8_t color);
+	/**
+		Draws a number of columns (same 8bits vertically) on the current page.
+		Note: the ReadModifyWrite must be enabled for this to work
+
+		@param x The x coordinate 0..127 (this will select column)
+		@param y The y coordinate 0..63 (this will select the page - will be converted to page number)
+		@param data The byte that will be output to the column
+		@param count How many columns should be filled with the data
+		@param color The color that the 1 pixels is displayed should be black or whit - ANDs or ORs the data to the pixels on the screen
+		@returns nothing
+	*/
+	void _drawColumns(uint8_t x, uint8_t y, uint8_t data, uint8_t count, uint8_t color);
 
 	// text related variables
 	uint8_t _cursorX = 0;
