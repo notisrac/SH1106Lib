@@ -286,32 +286,8 @@ void SH1106Lib::drawPixel(uint8_t x, uint8_t y, uint8_t color)
 	{
 		return;
 	}
-	_beginTransmission(I2CWRITE, true);
 
-	// set the position and enable the readmodifywrite mode
-	_setDisplayWritePosition(x, y, false);
-	sendCommand(SH1106_READMODIFYWRITE_START, false);
-	i2c_write(0xC0); // ???? 
-
-	// read the pixel data from the display
-	_beginTransmission(I2CREAD, false); // restart in read mode
-	i2c_read(false); // dummy read
-	byte b = i2c_read(true);
-	//Serial.println(b, BIN);
-	if (WHITE == color)
-	{
-		b |= (1 << (y & 7));
-	}
-	else
-	{
-		b &= ~(1 << (y & 7));
-	}
-	// write the modified data back
-	sendData(b, false);
-	// end the readmodifywrite mode
-	sendCommand(SH1106_READMODIFYWRITE_END, false);
-
-	_endTransmission();
+	_drawColumns(x, y, 1 << (y & 7), 1, color);
 }
 
 /*
