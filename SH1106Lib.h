@@ -86,6 +86,7 @@
 #define BLACK 0
 #define WHITE 1
 #define TRANSPARENT 255
+#define SOLID 127
 
 #define I2CREAD 1
 #define I2CWRITE 0
@@ -110,10 +111,10 @@ public:
 	void resetCursor();
 	void setFont(const unsigned char *font, uint8_t width, uint8_t height, int8_t offset = 0, bool useBlankAsSpace = false);
 	void setTextWrap(bool enableWrap);
-	void setTextColor(uint8_t color, uint8_t backColor);
+	void setTextColor(uint8_t color, uint8_t backgroundType);
 	// Inherited via TinyPrint
 	virtual byte write(uint8_t) override;
-	void drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color, uint8_t backgroundColor);
+	void drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color, uint8_t backgroundType);
 private:
 	void _setDisplayWritePosition(uint8_t x, uint8_t y, bool useOwnTransmission = false);
 	void _beginTransmission(byte operation = I2CWRITE, bool startNewTransmission = false);
@@ -138,9 +139,11 @@ private:
 
 		@param data The byte that will be output to the column
 		@param color The color that the 1 pixels is displayed should be black or whit - ANDs or ORs the data to the pixels on the screen
+		@param backgroundType The type of the background. Valid values: SOLID, TRANSPARENT
+		@param backgroundMask A byte mask to specify which bits are actually relevant in the data
 		@returns nothing
 	*/
-	void _drawColumn(uint8_t data, uint8_t color);
+	void _drawColumn(uint8_t data, uint8_t color, uint8_t backgroundType, byte backgroundMask);
 	/**
 		Draws a number of columns (same 8bits vertically) on the current page.
 		Note: the ReadModifyWrite must be enabled for this to work
@@ -158,7 +161,7 @@ private:
 	uint8_t _cursorX = 0;
 	uint8_t _cursorY = 0;
 	uint8_t _textColor = WHITE;
-	uint8_t _backgroundColor = TRANSPARENT;
+	uint8_t _backgroundType = TRANSPARENT;
 	uint8_t _fontWidth = 5;
 	uint8_t _fontHeight = 8;
 	int8_t _fontOffset = 0;

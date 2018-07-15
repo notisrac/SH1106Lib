@@ -340,10 +340,10 @@ void SH1106Lib::setTextWrap(bool enableWrap)
 	color: the color of the text
 	backColor: the color of the background of the text. Set it to TRANSPARENT to have a transparend background
 */
-void SH1106Lib::setTextColor(uint8_t color, uint8_t backColor)
+void SH1106Lib::setTextColor(uint8_t color, uint8_t backgroundType)
 {
 	_textColor = color;
-	_backgroundColor = backColor;
+	_backgroundType = backgroundType;
 }
 
 /*
@@ -363,7 +363,7 @@ byte SH1106Lib::write(uint8_t c)
 	}
 	else {
 		// draw the pixels for the actual character
-		drawChar(_cursorX, _cursorY, c, _textColor, _backgroundColor);
+		drawChar(_cursorX, _cursorY, c, _textColor, _backgroundType);
 		// advance the cursor
 		setCursor(_cursorX + _fontWidth + 1, _cursorY);
 		// if the next letter would not fit in the current row, jump to the beginnign of the next one
@@ -383,7 +383,7 @@ byte SH1106Lib::write(uint8_t c)
 	character: The character to display
 	color: the color of the character
 */
-void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color, uint8_t backgroundColor)
+void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color, uint8_t backgroundType)
 {
 	if ((x + _fontWidth >= SH1106_LCDWIDTH) || // Clip right
 		(y + _fontHeight >= SH1106_LCDHEIGHT) || // Clip bottom
@@ -391,37 +391,42 @@ void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color,
 		((y + _fontHeight) < 0))   // Clip top
 		return;
 
-	uint8_t line, i, j, k;
-	// how many bytes does one column of the font takes up
-	uint8_t byteWidth = ceil((float)_fontHeight / 8);
-
-	for (i = 0; i < (_fontWidth + 1); i++) {
-		for (k = 0; k < byteWidth; k++)
-		{ // if the fon is taller than 8
-			if (i == _fontWidth || (character == ' ' && _fontUseBlankAsSpace)) {
-				line = 0x00;
-			}
-			else {
-				// <the locaton of the font in memory> + 
-				// (<the character code> - <the offset (if the fontset is not complete)>) * <width of the font>
-				// 
-				line = pgm_read_byte(_font + (((character - _fontOffset) * _fontWidth) + i)*byteWidth + k);
-			}
-
-			for (j = k * 8; j < min(k * 8 + 8, _fontHeight + 1); j++) { // draw all the bits from the current line of the char
-				if (line & 0x1) { // if the current bit(pixel) is a 1, then plot a color pixel
-					drawPixel(x + i, y + j, color);
+	uint8_t line, i, j, k, n;
+	// how many bytes does one column of the font take up
+	uint8_t byteHeight = ceil((float)_fontHeight / 8);
+	uint8_t numberOfPages = ((0 == y % 8) || (((y % 8) + _fontHeight) < 8)) ? 1 : 2;
+	n = 0;
+	for (n = 0; n < numberOfPages; n++)
+	{ // if 
+	  // we are not starting from y dividable by 8 line, 
+	  // or the y and the font height is greater than 8*n, 
+	  // aka if the font would cross the page boundary
+	  // then we need to write the column in two runs
+		_startRMWMode(x, y + (n * 8));
+		for (i = 0; i < (_fontWidth + 1); i++) {
+			for (k = 0; k < byteHeight; k++)
+			{ // if the fon is taller than 8 pixels
+				if (i == _fontWidth || (character == ' ' && _fontUseBlankAsSpace)) {
+					line = 0x00;
 				}
-				else { // otherwise plot a black pixel
-					if (TRANSPARENT != backgroundColor)
-					{
-						drawPixel(x + i, y + j, backgroundColor);
-					}
+				else {
+					// <the locaton of the font in memory> + 
+					// (<the character code> - <the offset (if the fontset is not complete)>) * <width of the font>
+					// this is one vertical line of the character
+					line = pgm_read_byte(_font + (((character - _fontOffset) * _fontWidth) + i)*byteHeight + k);
 				}
-				// shift right to get the next bit(pixel)
-				line >>= 1;
+
+				if (0 == n)
+				{ // bottom half - or the whole char
+					_drawColumn(line << (y % 8), color, backgroundType, B11111111 << (y % 8));
+				}
+				else
+				{ // top half
+					_drawColumn(line >> (8 - (y % 8)), color, backgroundType, B11111111 >> (8 - (y % 8)));
+				}
 			}
 		}
+		_stopRMWMode();
 	}
 }
 
@@ -511,15 +516,28 @@ void SH1106Lib::_stopRMWMode()
 	_endTransmission();
 }
 
-void SH1106Lib::_drawColumn(uint8_t data, uint8_t color)
+void SH1106Lib::_drawColumn(uint8_t data, uint8_t color, uint8_t backgroundType = TRANSPARENT, byte backgroundMask = B00000000)
 {
 	byte b = data;
 	// read the pixel data from the display
 	_beginTransmission(I2CREAD, false); // restart in read mode
 	i2c_read(false); // dummy read
 	b = i2c_read(true);
-	//b |= data;
-	//	b &= ~(1 << (y & 7));
+
+	// handle the solid/transparent background
+	if (SOLID == backgroundType)
+	{
+		if (BLACK == color)
+		{ // solid white background
+			b |= backgroundMask;
+		}
+		else
+		{ // solid black background
+			b &= ~backgroundMask;
+		}
+	}
+
+	// modify the read byte with the data, based on the color
 	if (WHITE == color)
 	{
 		b |= data;
