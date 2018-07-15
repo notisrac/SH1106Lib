@@ -1,14 +1,65 @@
-FEATURES
- * no buffer, but does pixel-by-pixel update
- * really slow
- * minimalistic
- * optimized for size
- * for small devices with minimal resources
+# No buffer SH1106 OLED display driver
 
-LINKS
+## FEATURES
+ * no buffer, but does pixel-by-pixel update
+ * slower than the buffered libs
+ * basic functionality
+ * optimized for size
+ * for small devices with minimal resources ([Atmel AVR ATtiny family](https://en.wikipedia.org/wiki/Atmel_AVR_ATtiny_comparison_chart))
+
+
+## FUNCTIONS
+### Draw a pixel
+_fillme_
+
+### Draw a filled rectangle
+_fillme_
+
+### Print text
+_fillme_
+
+### Display a bitmap
+_fillme_
+
+## GETTING STARTED
+_fillme_
+```c++
+#include "SH1106Lib.h"
+SH1106Lib display;
+
+void setup() {
+	display.initialize();
+	display.clearDisplay();
+}
+
+void loop() {
+ // use display.
+}
+```
+
+
+## CONSIDERATIONS
+ * Printing text do not span the page boundary (aka y % 8 == 0) lines are faster
+ * Plotting individual pixels in large numbers is slow
+
+
+## LINKS
  * https://playground.arduino.cc/Main/SoftwareI2CLibrary
  * https://github.com/notisrac/TinyPrint
 
-TODO
-  * Add draw functions (line, ciricle, etc.)
-  * Drawing a bitmap should be done by one segment a time, while keeping the same readmodifywrite session - this should improve speed
+## TASKS
+ - [x] Write display initialization code
+ - [x] Implement single pixel drawing
+ - [x] Implement clearDisplay
+ - [x] Implement text printing functionality
+ - [x] Use [SoftwareI2CLibrary](https://playground.arduino.cc/Main/SoftwareI2CLibrary)
+ - [x] Display bitmaps
+ - [ ] Implement drawLine
+ - [ ] Implement drawCircle
+ - [ ] Implement drawRect
+ - [x] Put the whole thing into a library format
+ - [x] Write example codes for lib
+ - [x] Figure out how the Read Modify Write mode works
+ - [x] Implement fillRect with RMW mode
+ - [x] Change drawChar to use RMW mode
+ - [ ] Change drawBitmap to use RMW mode
