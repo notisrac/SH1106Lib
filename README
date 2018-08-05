@@ -1,11 +1,9 @@
 # No buffer SH1106 OLED display driver
 
 ## FEATURES
- * no buffer, but does pixel-by-pixel update
- * slower than the buffered libs
- * basic functionality
- * optimized for size
- * for small devices with minimal resources ([Atmel AVR ATtiny family](https://en.wikipedia.org/wiki/Atmel_AVR_ATtiny_comparison_chart))
+ * no buffer
+ * minimal memory and code size
+ * designed for small devices with limited resources ([Atmel AVR ATtiny family](https://en.wikipedia.org/wiki/Atmel_AVR_ATtiny_comparison_chart))
 
 
 ## FUNCTIONS
@@ -39,9 +37,13 @@ void loop() {
 
 
 ## CONSIDERATIONS
- * Printing text do not span the page boundary (aka y % 8 == 0) lines are faster
+ * Much slower than a bufferd lib like [U8g2](https://github.com/olikraus/u8g2)
+ * Printing text that don't span the page boundary (aka y % 8 == 0) lines are about 50% faster
+ * Displaying an image that don't span the page boundary (aka y % 8 == 0) lines are about 50% faster
  * Plotting individual pixels in large numbers is slow
+ * If constanty updating a text/image on screen, if the design allows it, set the background to SOLID. This is much faster, than clearing the area with fillRect
 
+_Note: all measurements are made on an Arduino UNO with I2C_FASTMODE on, I2C_HARDWARE, I2C_TIMEOUT = 10 and I2C_MAXWAIT = 10_
 
 ## LINKS
  * https://playground.arduino.cc/Main/SoftwareI2CLibrary
@@ -62,4 +64,4 @@ void loop() {
  - [x] Figure out how the Read Modify Write mode works
  - [x] Implement fillRect with RMW mode
  - [x] Change drawChar to use RMW mode
- - [ ] Change drawBitmap to use RMW mode
+ - [x] Change drawBitmap to use RMW mode
