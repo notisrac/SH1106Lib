@@ -1,39 +1,102 @@
 # No buffer SH1106 OLED display driver
+An Arduino library for the SH1106 OLED display, for the lower end of the Atmel AVR MCU range that has limited resources
+
 
 ## FEATURES
  * no buffer
- * minimal memory and code size
+ * minimal RAM (33 bytes) and flash (4366 bytes) size
  * designed for small devices with limited resources ([Atmel AVR ATtiny family](https://en.wikipedia.org/wiki/Atmel_AVR_ATtiny_comparison_chart))
+ * supports hardware and software I2C modes
 
-
-## FUNCTIONS
-### Draw a pixel
-_fillme_
-
-### Draw a filled rectangle
-_fillme_
-
-### Print text
-_fillme_
-
-### Display a bitmap
-_fillme_
 
 ## GETTING STARTED
-_fillme_
+You must install the following libraries:
+ * https://playground.arduino.cc/Main/SoftwareI2CLibrary
+ * https://github.com/notisrac/TinyPrint
+ * This library :)
+
+_Follow this guide: https://www.arduino.cc/en/Guide/Libraries_
+
+This is the minimal code required to make the library work:
 ```c++
 #include "SH1106Lib.h"
 SH1106Lib display;
 
 void setup() {
-	display.initialize();
-	display.clearDisplay();
+    display.initialize();
+    display.clearDisplay();
 }
 
 void loop() {
- // use display.
+    // use display.
 }
 ```
+
+
+## FUNCTIONS
+### Draw a pixel
+```c++
+// displays a white pixel at 10, 10
+display.drawPixel(10, 10, WHITE);
+```
+
+### Draw a filled rectangle
+```c++
+// draws a white filled rectangle at 5, 5, with a width of 10 and height of 3
+display.fillRect(5, 5, 10, 3, WHITE); 
+```
+
+### Print text
+```c++
+// need to include the font itself
+#include "glcdfont.h"
+
+...
+
+// first we tell the lib the font and its properties, that we want to use
+display.setFont(font, 5, 7);
+// OR
+// display.setFont(font_3x5, FONT_3x5_WIDTH, FONT_3x5_HEIGHT, 45, FONT_NUMBERS | FONT_UPPERCASECHARS);
+// set whether long text should wrap to the next line upon reaching the end of the display
+display.setTextWrap(true);
+// set the text front and background color
+display.setTextColor(WHITE, TRANSPARENT);
+// set where we want to print the text to
+display.setCursor(0, 0);
+// display the text, using the standard Arduino print methods
+display.print(F("Hello world!"));
+```
+
+### Display a bitmap
+```c++
+// need to include the font itself
+#define HEIGHT 5
+#define WIDTH 11
+
+// it is a tiny battery
+static const byte battery[] PROGMEM  = {
+  B11111111, B10010000, 
+  B00011110, B00000010, 
+  B11000000, B01111111, 
+  B11111000
+};
+
+...
+
+// display the bitmap at 5, 3, in white, with transparent background
+display.drawBitmap(5, 3, battery, WIDTH, HEIGHT, WHITE, TRANSPARENT);
+```
+
+
+## Converting fonts and bitmaps
+To be able to use your fonts/bitmaps with this library, you need to convert it to a specified format.
+For this you can use the [File to C style array converter](https://notisrac.github.io/FileToCArray/) like this:
+ 1. Load the image into the converter ("Browse...", select image, "Open")
+ 1. Set the code format to your liking
+ 1. Set the palette mod to 1bit line art
+ 1. Tick the Optimize for column read checkbox
+ 1. Click "Convert"
+ 1. Click "Save as file" OR Click "Copy to clipboard"
 
 
 ## CONSIDERATIONS
@@ -45,9 +108,138 @@ void loop() {
 
 _Note: all measurements are made on an Arduino UNO with I2C_FASTMODE on, I2C_HARDWARE, I2C_TIMEOUT = 10 and I2C_MAXWAIT = 10_
 
+## Comparison
+U8g2 Page buffer mode (Picture Loop)
+Sketch uses 9156 bytes (28%) of program storage space. Maximum is 32256 bytes.
+Global variables use 581 bytes (28%) of dynamic memory, leaving 1467 bytes for local variables. Maximum is 2048 bytes.
+
 ## LINKS
  * https://playground.arduino.cc/Main/SoftwareI2CLibrary
  * https://github.com/notisrac/TinyPrint
+
+
+## Documentation
+
+### `SH1106Lib()`
+The constructor
+
+### `void initialize()`
+Initializes the display
+
+### `void sendCommand(byte c, bool useOwnTransmission = true)`
+Sends a single command to the display
+ - command: the command (byte) that needs to be sent to the device
+ - startTransmission: should it start a new transmission? Set this to false if you already started a transmission
+
+### `void sendData(byte data, bool useOwnTransmission = true)`
+Sends a single byte of data to the display
+ - data: the data (byte) that needs to be sent to the device
+
+### `void sendData(byte *data, uint8_t count, bool useOwnTransmission = true)`
+Sends a batch of data to the display
+ - data: the data array (bytes) that needs to be sent to the device
+ - count: the number of items in the array
+
+### `void clearDisplay(void)`
+Clears the display
+
+### `fillRect(uint8_t left, uint8_t top, uint8_t width, uint8_t height, uint8_t color)`
+Displays a filled rectangle
+ - left: x coordinate of the top left corner of the rectangle
+ - top: y coordinate of the top left corner of the rectangle
+ - width: width of the rectangle
+ - height: height of the rectangle
+ - color: color of the rectangle
+
+### `void drawBitmap(uint8_t x, uint8_t y, const byte *bitmap, uint8_t w, uint8_t h, uint8_t color, uint8_t backgroundType)`
+Draws a bitmap from the program memory to the display
+ - x: the x coordinate to put the bitmap
+ - y: the y coordiante to put the bitmap
+ - bitmap: the byte array representing the image
+ - w: the width of the image
+ - h: the height of the image
+ - color: the color which the image should be displayed (BLACK/WHITE)
+ - backgroundType: SOLID or TRANSPARENT background
+
+### `void drawPixel(uint8_t x, uint8_t y, uint8_t color)`
+Draws a single pixel on th display
+ - x: the x coordinate to put the pixel
+ - y: the y coordiante to put the pixel
+ - color: the color of the pixel (WHITE or BLACK)
+
+### `void setCursor(uint8_t x, uint8_t y)`
+Sets the text cursor to this position
+ - x: the x coordinate
+ - y: the y coordiante
+
+### `void resetCursor()`
+Resets the text cursor to 0,0
+
+### `void setFont(const unsigned char *font, uint8_t width, uint8_t height, int8_t offset = 0, uint8_t flags = FONT_FULL)`
+Sets the font to write with
+ - font: pinter to the array containing the font
+ - width: the width of the font in pixels
+ - height: the height of the font in pixels
+ - offset: signed value to offset the position the character is found in the font
+ - flags: set of flags describing the properties of the font
+
+```c++
+// Examples:
+// this is an 5x7 full font 
+display.setFont(font, 5, 7);
+// this is a 10x11 font, that only contains numbers
+display.setFont(font_10x11, 10, 11, 48, FONT_NUMBERS);
+// this is a 3x5 font, that has numbers and upper case characters, but no lowercase or space character
+display.setFont(font_3x5, 3, 5, 45, FONT_NUMBERS | FONT_UPPERCASECHARS);
+```
+
+### `void setTextWrap(bool enableWrap)`
+Sets whether the text should continue on the next row, if it has reached the end of the current one
+ - enableWrap: true to enable, false to disable
+
+### `void setTextColor(uint8_t color, uint8_t backgroundType)`
+Sets whether the text should continue on the next row, if it has reached the end of the current one
+ - color: the color of the text
+ - backColor: the color of the background of the text. Set it to TRANSPARENT to have a transparend background
+
+### `virtual byte write(uint8_t) override`
+_Inherited via TinyPrint_
+Displays a single character
+ - c: the character to display
+ - returns: 1
+
+### `void drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color, uint8_t backgroundType)`
+Draws a character on the screen from the font
+ - x: x coordinate where the character should be displayed
+ - y: y coordinate where the character should be displayed
+ - character: The character to display
+ - color: the color of the character
+ - backgroundType: SOLID or TRANSPARENT
+
+
+### Color types
+ - BLACK
+ - WHITE
+
+### Background types
+ - SOLID
+ - TRANSPARENT
+
+### Font flags
+ - FONT_NUMBERS: the font has numbers
+ - FONT_UPPERCASECHARS: the font has upper case characters
+ - FONT_LOWERCASECHARS: the font has lower case characters
+ - FONT_HASSPACE: the font has a separate character for the space (' ')
+ - FONT_FULL: a full font (this has all of the above)
+
+```c++
+// Examples:
+// this is a font, that only contains numbers
+FONT_NUMBERS
+// this is a font, that has numbers and upper case characters, but no lowercase or space character
+FONT_NUMBERS | FONT_UPPERCASECHARS
+```
+
 
 ## TASKS
  - [x] Write display initialization code
@@ -61,10 +253,11 @@ _Note: all measurements are made on an Arduino UNO with I2C_FASTMODE on, I2C_HAR
  - [ ] Implement drawRect
  - [x] Put the whole thing into a library format
  - [x] Write example codes for lib
- - [x] Figure out how the Read Modify Write mode works
+ - [x] Figure out how the Read Modify Write (RMW) mode works
  - [x] Implement fillRect with RMW mode
  - [x] Change drawChar to use RMW mode
  - [x] Change drawBitmap to use RMW mode
+ - [ ] Do measurements on different devices
 
 
 [![Analytics](https://ga-beacon.appspot.com/UA-122950438-1/SH1106Lib)](https://github.com/igrigorik/ga-beacon)

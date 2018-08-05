@@ -182,6 +182,14 @@ char* printBits(byte myByte) {
 	return str;
 }
 
+/*
+Displays a filled rectangle
+left: x coordinate of the top left corner of the rectangle
+top: y coordinate of the top left corner of the rectangle
+width: width of the rectangle
+height: height of the rectangle
+color: color of the rectangle
+*/
 void SH1106Lib::fillRect(uint8_t left, uint8_t top, uint8_t width, uint8_t height, uint8_t color)
 {
 	// sanity check
@@ -329,6 +337,7 @@ void SH1106Lib::resetCursor()
 	width: the width of the font in pixels
 	height: the height of the font in pixels
 	offset: signed value to offset the position the character is found in the font
+	flags: set of flags describing the properties of the font
 */
 void SH1106Lib::setFont(const unsigned char *font, uint8_t width, uint8_t height, int8_t offset = 0, uint8_t flags = FONT_FULL)
 {
@@ -367,7 +376,6 @@ void SH1106Lib::setTextColor(uint8_t color, uint8_t backgroundType)
 */
 byte SH1106Lib::write(uint8_t c)
 {
-	Serial.print("%");
 	if (c == '\n') { // on a linebreak move the cursor down one line, and back to the start
 		setCursor(0, _cursorY + _fontHeight);
 	}
@@ -476,7 +484,7 @@ void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color,
 void SH1106Lib::_setDisplayWritePosition(uint8_t x, uint8_t y, bool useOwnTransmission = false)
 {
 	if (x == _pixelPosX && ((y >> 3) == _pixelPosY))
-	{
+	{ // should not try to set on the same position again
 		return;
 	}
 
