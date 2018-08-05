@@ -235,7 +235,8 @@ void SH1106Lib::fillRect(uint8_t left, uint8_t top, uint8_t width, uint8_t heigh
 	bitmap: the byte array representing the image
 	w: the width of the image
 	h: the height of the image
-	color: the color which the image should be displayed
+	color: the color which the image should be displayed (BLACK/WHITE)
+	backgroundType: SOLID or TRANSPARENT background
 */
 void SH1106Lib::drawBitmap(uint8_t x, uint8_t y, const byte * bitmap, uint8_t w, uint8_t h, uint8_t color, uint8_t backgroundType = SOLID)
 {
@@ -247,8 +248,8 @@ void SH1106Lib::drawBitmap(uint8_t x, uint8_t y, const byte * bitmap, uint8_t w,
 	uint8_t i, j, n, diff, yActual;
 	uint8_t actualByte = 0x00;
 
-	uint8_t startSize = 8 - (y % 8);
-	uint8_t endSize = (y + h) % 8;
+	//uint8_t startSize = 8 - (y % 8);
+	//uint8_t endSize = (y + h) % 8;
 
 	// height / 8, because we will plot in columns with the height of 8
 	for (j = 0; j < ceil(h / 8.0); j++) {
@@ -329,13 +330,13 @@ void SH1106Lib::resetCursor()
 	height: the height of the font in pixels
 	offset: signed value to offset the position the character is found in the font
 */
-void SH1106Lib::setFont(const unsigned char *font, uint8_t width, uint8_t height, int8_t offset = 0, bool useBlankAsSpace = false)
+void SH1106Lib::setFont(const unsigned char *font, uint8_t width, uint8_t height, int8_t offset = 0, uint8_t flags = FONT_FULL)
 {
 	_font = font;
 	_fontWidth = width;
 	_fontHeight = height;
 	_fontOffset = offset;
-	_fontUseBlankAsSpace = useBlankAsSpace;
+	_fontFlags = flags;
 }
 
 /*
@@ -394,6 +395,7 @@ byte SH1106Lib::write(uint8_t c)
 	y: y coordinate where the character should be displayed
 	character: The character to display
 	color: the color of the character
+	backgroundType: SOLID or TRANSPARENT
 */
 void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color, uint8_t backgroundType)
 {
@@ -403,43 +405,66 @@ void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color,
 		((y + _fontHeight) < 0))   // Clip top
 		return;
 
-	uint8_t line, i, j, k, n;
-	// how many bytes does one column of the font take up
-	uint8_t byteHeight = ceil((float)_fontHeight / 8);
-	uint8_t numberOfPages = ((0 == y % 8) || (((y % 8) + _fontHeight) < 8)) ? 1 : 2;
-	n = 0;
-	for (n = 0; n < numberOfPages; n++)
-	{ // if 
-	  // we are not starting from y dividable by 8 line, 
-	  // or the y and the font height is greater than 8*n, 
-	  // aka if the font would cross the page boundary
-	  // then we need to write the column in two runs
-		_startRMWMode(x, y + (n * 8));
-		for (i = 0; i < (_fontWidth + 1); i++) {
-			for (k = 0; k < byteHeight; k++)
-			{ // if the font is taller than 8 pixels
-				if (i == _fontWidth || (character == ' ' && _fontUseBlankAsSpace)) {
-					line = 0x00;
+	uint8_t i, j, n;
+	uint8_t diff, yActual, actualByte;
+	uint8_t byteHeight = ceil(_fontHeight / 8.0);
+
+	// try to mod the character, if the font does not have the required case
+	if (isLowerCase(character))
+	{
+		if ((_fontFlags & FONT_LOWERCASECHARS) != FONT_LOWERCASECHARS)
+		{
+			character = toUpperCase(character);
+		}
+	}
+	else
+	{
+		if ((_fontFlags & FONT_UPPERCASECHARS) != FONT_UPPERCASECHARS)
+		{
+			character = toLowerCase(character);
+		}
+	}
+
+
+	// height / 8, because we will plot in columns with the height of 8
+	for (j = 0; j < byteHeight; j++) {
+		// calculate the start pos
+		diff = (y + j * 8) % 8;
+		for (n = 0; n < ((0 == diff) ? 1 : 2); n++) // if it starts on the page border, then we can do it in one run
+		{
+			yActual = y + ((j + n) * 8);
+			if (yActual > SH1106_LCDHEIGHT)
+			{ // don't try to write outside the display area
+				continue;
+			}
+			_startRMWMode(x, y + ((j + n) * 8));
+			// loop through the width of the image, and plot the columns
+			for (i = 0; i < _fontWidth; i++) {
+				if ((x + i) > SH1106_LCDWIDTH)
+				{ // don't try to write outside the display area
+					continue;
+				}
+				if (i == _fontWidth || (character == ' ' && ((_fontFlags & FONT_HASSPACE) != FONT_HASSPACE ))) {
+					actualByte = 0x00;
 				}
 				else {
-					// <the locaton of the font in memory> + 
-					// (<the character code> - <the offset (if the fontset is not complete)>) * <width of the font>
-					// this is one vertical line of the character
-					line = pgm_read_byte(_font + (((character - _fontOffset) * _fontWidth) + i)*byteHeight + k);
+					actualByte = pgm_read_byte(_font + ((character - _fontOffset) * _fontWidth + i) * byteHeight + j);
 				}
-
 				if (0 == n)
-				{ // bottom half - or the whole char
-					_drawColumn(line << (y % 8), color, backgroundType, B11111111 << (y % 8));
+				{ // this is the below the page barrier
+					actualByte = actualByte << diff;
 				}
 				else
-				{ // top half
-					_drawColumn(line >> (8 - (y % 8)), color, backgroundType, B11111111 >> (8 - (y % 8)));
+				{ // this is the leftover - this only comes in play when the current part of the image crosses the page boundary
+					actualByte = actualByte >> 8 - diff;
 				}
+				// display the column of pixels
+				_drawColumn(actualByte, color, backgroundType, B11111111);
 			}
+			_stopRMWMode();
 		}
-		_stopRMWMode();
 	}
+
 }
 
 /*

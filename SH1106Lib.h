@@ -91,6 +91,14 @@
 #define I2CREAD 1
 #define I2CWRITE 0
 
+// font flags
+#define FONT_NUMBERS        1
+#define FONT_UPPERCASECHARS 2
+#define FONT_LOWERCASECHARS 4
+#define FONT_HASSPACE       8
+#define FONT_FULL           255
+
+
 class SH1106Lib : public TinyPrint
 {
 public:
@@ -109,7 +117,7 @@ public:
 
 	void setCursor(uint8_t x, uint8_t y);
 	void resetCursor();
-	void setFont(const unsigned char *font, uint8_t width, uint8_t height, int8_t offset = 0, bool useBlankAsSpace = false);
+	void setFont(const unsigned char *font, uint8_t width, uint8_t height, int8_t offset = 0, uint8_t flags = FONT_FULL);
 	void setTextWrap(bool enableWrap);
 	void setTextColor(uint8_t color, uint8_t backgroundType);
 	// Inherited via TinyPrint
@@ -165,7 +173,7 @@ private:
 	uint8_t _fontWidth = 5;
 	uint8_t _fontHeight = 8;
 	int8_t _fontOffset = 0;
-	bool _fontUseBlankAsSpace = false;
+	uint8_t _fontFlags = FONT_FULL;
 	bool _wrap = true;
 	const unsigned char* _font;
 
@@ -226,4 +234,7 @@ lib nobuffer + tinyprint + softi2cmaster 2018.05.01
 Program LedTester size: 6 696 bytes (used 21% of a 32�256 byte maximum) (0,68 secs)
 Minimum Memory Usage: 208 bytes (10% of a 2048 byte maximum)
 
+lib nobuffer + tinyprint + softi2cmaster (RMW mode) 2018.08.05
+Program SH1106Test size: 5 316 bytes (used 16% of a 32 256 byte maximum) (3,64 secs)
+Minimum Memory Usage: 210 bytes (10% of a 2048 byte maximum)
 */
