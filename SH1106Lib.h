@@ -104,7 +104,7 @@ public:
 
 	void clearDisplay(void);
 	void fillRect(uint8_t left, uint8_t top, uint8_t width, uint8_t height, uint8_t color);
-	void drawBitmap(uint8_t x, uint8_t y, const byte *bitmap, uint8_t w, uint8_t h, uint8_t color, uint8_t bgcolor);
+	void drawBitmap(uint8_t x, uint8_t y, const byte *bitmap, uint8_t w, uint8_t h, uint8_t color, uint8_t backgroundType);
 	void drawPixel(uint8_t x, uint8_t y, uint8_t color);
 
 	void setCursor(uint8_t x, uint8_t y);

@@ -237,38 +237,50 @@ void SH1106Lib::fillRect(uint8_t left, uint8_t top, uint8_t width, uint8_t heigh
 	h: the height of the image
 	color: the color which the image should be displayed
 */
-void SH1106Lib::drawBitmap(uint8_t x, uint8_t y, const byte * bitmap, uint8_t w, uint8_t h, uint8_t color, uint8_t bgcolor)
+void SH1106Lib::drawBitmap(uint8_t x, uint8_t y, const byte * bitmap, uint8_t w, uint8_t h, uint8_t color, uint8_t backgroundType = SOLID)
 {
 	if (w > SH1106_LCDWIDTH || h > SH1106_LCDHEIGHT)
 	{ // sanity check
 		return;
 	}
 
-	uint8_t i, j;
-	uint8_t bitMask = 128;
+	uint8_t i, j, n, diff, yActual;
 	uint8_t actualByte = 0x00;
-	bool bit = false;
 
-	for (j = 0; j < h; j++) {
-		for (i = 0; i < w; i++) {
-			actualByte = pgm_read_byte(bitmap + (((j * w) + i) / 8));
-			bit = actualByte & bitMask;
+	uint8_t startSize = 8 - (y % 8);
+	uint8_t endSize = (y + h) % 8;
 
-			if (bit)
-			{
-				drawPixel(x + i, y + j, color);
+	// height / 8, because we will plot in columns with the height of 8
+	for (j = 0; j < ceil(h / 8.0); j++) {
+		// calculate the start pos
+		diff = (y + j * 8) % 8;
+		for (n = 0; n < ((0 == diff)? 1 : 2); n++) // if it starts on the page border, then we can do it in one run
+		{
+			yActual = y + ((j + n) * 8);
+			if (yActual > SH1106_LCDHEIGHT)
+			{ // don't try to write outside the display area
+				continue;
 			}
-			else if (bgcolor != TRANSPARENT)
-			{
-				drawPixel(x + i, y + j, bgcolor);
+			_startRMWMode(x, y + ((j + n) * 8));
+			// loop through the width of the image, and plot the columns
+			for (i = 0; i < w; i++) {
+				if ((x + i) > SH1106_LCDWIDTH)
+				{ // don't try to write outside the display area
+					continue;
+				}
+				actualByte = pgm_read_byte(bitmap + (i + (j * w)));
+				if (0 == n)
+				{ // this is the below the page barrier
+					actualByte = actualByte << diff;
+				}
+				else
+				{ // this is the leftover - this only comes in play when the current part of the image crosses the page boundary
+					actualByte = actualByte >> 8 - diff;
+				}
+				// display the column of pixels
+				_drawColumn(actualByte, color, backgroundType, B11111111);
 			}
-
-			bitMask >>= 1;
-			if (!bitMask)
-			{
-				bitMask = 128;
-			}
-
+			_stopRMWMode();
 		}
 	}
 }
@@ -405,7 +417,7 @@ void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color,
 		_startRMWMode(x, y + (n * 8));
 		for (i = 0; i < (_fontWidth + 1); i++) {
 			for (k = 0; k < byteHeight; k++)
-			{ // if the fon is taller than 8 pixels
+			{ // if the font is taller than 8 pixels
 				if (i == _fontWidth || (character == ' ' && _fontUseBlankAsSpace)) {
 					line = 0x00;
 				}
