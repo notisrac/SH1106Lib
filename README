@@ -65,3 +65,6 @@ _Note: all measurements are made on an Arduino UNO with I2C_FASTMODE on, I2C_HAR
  - [x] Implement fillRect with RMW mode
  - [x] Change drawChar to use RMW mode
  - [x] Change drawBitmap to use RMW mode
+
+
+[![Analytics](https://ga-beacon.appspot.com/UA-122950438-1/SH1106Lib)](https://github.com/igrigorik/ga-beacon)
