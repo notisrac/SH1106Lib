@@ -9,6 +9,7 @@
 #include "SH1106Lib.h"
 #include <SoftI2CMaster.h>
 
+#define intCeil(x,y) (((x) + (y) - 1) / (y))
 
 SH1106Lib::SH1106Lib()
 {
@@ -137,7 +138,7 @@ void SH1106Lib::sendData(byte * data, uint8_t count, bool useOwnTransmission = t
 void SH1106Lib::clearDisplay(void)
 {
 	uint8_t page, segments;
-	byte buffer[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	byte buffer[16] = { 0x00 };
 
 	_beginTransmission(I2CWRITE, true);
 	// clear the buffer so we can fill the screen with zeroes
@@ -154,33 +155,33 @@ void SH1106Lib::clearDisplay(void)
 	_endTransmission();
 }
 
-unsigned char reverse(unsigned char b) {
-	b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
-	b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
-	b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
-	return b;
-}
-
-char* printBits(byte myByte) {
-	static char str[9];
-	byte mask = 0x80;
-
-	for (uint8_t i = 0; i < 8; i++)
-	{
-		if (mask & myByte)
-		{
-			str[i] = '1';
-		}
-		else
-		{
-			str[i] = '0';
-		}
-		mask >>= 1;
-	}
-	str[8] = '\0';
-
-	return str;
-}
+//unsigned char reverse(unsigned char b) {
+//	b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+//	b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+//	b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+//	return b;
+//}
+//
+//char* printBits(byte myByte) {
+//	static char str[9];
+//	byte mask = 0x80;
+//
+//	for (uint8_t i = 0; i < 8; i++)
+//	{
+//		if (mask & myByte)
+//		{
+//			str[i] = '1';
+//		}
+//		else
+//		{
+//			str[i] = '0';
+//		}
+//		mask >>= 1;
+//	}
+//	str[8] = '\0';
+//
+//	return str;
+//}
 
 /*
 Displays a filled rectangle
@@ -260,7 +261,7 @@ void SH1106Lib::drawBitmap(uint8_t x, uint8_t y, const byte * bitmap, uint8_t w,
 	//uint8_t endSize = (y + h) % 8;
 
 	// height / 8, because we will plot in columns with the height of 8
-	for (j = 0; j < ceil(h / 8.0); j++) {
+	for (j = 0; j < intCeil(h, 8) /*ceil(h / 8.0)*/; j++) {
 		// calculate the start pos
 		diff = (y + j * 8) % 8;
 		for (n = 0; n < ((0 == diff)? 1 : 2); n++) // if it starts on the page border, then we can do it in one run
@@ -415,7 +416,7 @@ void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color,
 
 	uint8_t i, j, n;
 	uint8_t diff, yActual, actualByte;
-	uint8_t byteHeight = ceil(_fontHeight / 8.0);
+	uint8_t byteHeight = intCeil(_fontHeight, 8) /*ceil(_fontHeight / 8.0)*/;
 
 	// try to mod the character, if the font does not have the required case
 	if (isLowerCase(character))

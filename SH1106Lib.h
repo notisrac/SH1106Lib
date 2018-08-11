@@ -187,6 +187,11 @@ private:
 #endif // _SH1106LIB_H
 
 /*
+Empty arduino sketch ("bare minimum")
+Sketch uses 444 bytes (1%) of program storage space. Maximum is 32256 bytes.
+Global variables use 9 bytes (0%) of dynamic memory, leaving 2039 bytes for local variables. Maximum is 2048 bytes.
+
+
 Empty:
 Program LedTester size: 4�544 bytes (used 14% of a 32�256 byte maximum) (1,05 secs)
 Minimum Memory Usage: 317 bytes (15% of a 2048 byte maximum)
@@ -237,4 +242,12 @@ Minimum Memory Usage: 208 bytes (10% of a 2048 byte maximum)
 lib nobuffer + tinyprint + softi2cmaster (RMW mode) 2018.08.05
 Program SH1106Test size: 5 316 bytes (used 16% of a 32 256 byte maximum) (3,64 secs)
 Minimum Memory Usage: 210 bytes (10% of a 2048 byte maximum)
+
+lib nobuffer + tinyprint + softi2cmaster (removed stray Serial.println) 2018.08.05
+Program SH1106Test size: 5 578 bytes (used 17% of a 32 256 byte maximum) (4,34 secs)
+Minimum Memory Usage: 33 bytes (2% of a 2048 byte maximum)
+
+lib nobuffer + tinyprint + softi2cmaster (removed float operations) 2018.08.11
+Program SH1106Test size: 3 572 bytes (used 11% of a 32 256 byte maximum) (1,69 secs)
+Minimum Memory Usage: 33 bytes (2% of a 2048 byte maximum)
 */
