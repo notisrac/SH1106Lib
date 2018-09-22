@@ -15,15 +15,17 @@
 #include <Arduino.h>
 #include <TinyPrint.h>
 
-#define I2C_HARDWARE 1
-#define I2C_TIMEOUT 10
-#define I2C_MAXWAIT 10
-#define I2C_PULLUP 1
-#define I2C_FASTMODE 1
-#define SDA_PORT PORTC
-#define SDA_PIN 4 // = A4
-#define SCL_PORT PORTC
-#define SCL_PIN 5 // = A5
+// TODO change these to #ifndef
+//#define I2C_HARDWARE 1
+//#define I2C_TIMEOUT 10
+//#define I2C_MAXWAIT 10
+//#define I2C_PULLUP 1
+//#define I2C_FASTMODE 1
+//#define SDA_PORT PORTC
+//#define SDA_PIN 4 // = A4
+//#define SCL_PORT PORTC
+//#define SCL_PIN 5 // = A5
+//#include <SoftI2CMaster.h>
 
 // region display_constants
 #define SH1106_I2C_ADDRESS   0x3C // 011110+SA0+RW - 0x3C or 0x3D
@@ -108,7 +110,7 @@ public:
 	void initialize();
 	void sendCommand(byte c, bool useOwnTransmission = true);
 	void sendData(byte data, bool useOwnTransmission = true);
-	void sendData(byte *data, uint8_t count, bool useOwnTransmission = true);
+	//void sendData(byte *data, uint8_t count, bool useOwnTransmission = true);
 
 	void clearDisplay(void);
 	void fillRect(uint8_t left, uint8_t top, uint8_t width, uint8_t height, uint8_t color);
@@ -123,6 +125,7 @@ public:
 	// Inherited via TinyPrint
 	virtual byte write(uint8_t) override;
 	void drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color, uint8_t backgroundType);
+
 private:
 	void _setDisplayWritePosition(uint8_t x, uint8_t y, bool useOwnTransmission = false);
 	void _beginTransmission(byte operation = I2CWRITE, bool startNewTransmission = false);
@@ -151,7 +154,7 @@ private:
 		@param backgroundMask A byte mask to specify which bits are actually relevant in the data
 		@returns nothing
 	*/
-	void _drawColumn(uint8_t data, uint8_t color, uint8_t backgroundType, byte backgroundMask);
+	void _drawColumn(uint8_t data, uint8_t color, uint8_t backgroundType = TRANSPARENT, byte backgroundMask = B00000000);
 	/**
 		Draws a number of columns (same 8bits vertically) on the current page.
 		Note: the ReadModifyWrite must be enabled for this to work
@@ -193,50 +196,50 @@ Global variables use 9 bytes (0%) of dynamic memory, leaving 2039 bytes for loca
 
 
 Empty:
-Program LedTester size: 4�544 bytes (used 14% of a 32�256 byte maximum) (1,05 secs)
+Program LedTester size: 4544 bytes (used 14% of a 32256 byte maximum) (1,05 secs)
 Minimum Memory Usage: 317 bytes (15% of a 2048 byte maximum)
 
 D
-Program LedTester size: 4�604 bytes (used 14% of a 32�256 byte maximum) (1,08 secs)
+Program LedTester size: 4604 bytes (used 14% of a 32256 byte maximum) (1,08 secs)
 Minimum Memory Usage: 333 bytes (16% of a 2048 byte maximum)
 
-Program LedTester size: 4�680 bytes (used 15% of a 32�256 byte maximum) (1,13 secs)
+Program LedTester size: 4680 bytes (used 15% of a 32256 byte maximum) (1,13 secs)
 Minimum Memory Usage: 327 bytes (16% of a 2048 byte maximum)
 
 D : TP
-Program LedTester size: 4�746 bytes (used 15% of a 32�256 byte maximum) (1,19 secs)
+Program LedTester size: 4746 bytes (used 15% of a 32256 byte maximum) (1,19 secs)
 Minimum Memory Usage: 327 bytes (16% of a 2048 byte maximum)
 
 D : P
-Program LedTester size: 4�668 bytes (used 14% of a 32�256 byte maximum) (1,13 secs)
+Program LedTester size: 4668 bytes (used 14% of a 32256 byte maximum) (1,13 secs)
 Minimum Memory Usage: 3	7 bytes (16% of a 2048 byte maximum)
 
 lib + tinyp
-Program LedTester size: 4�660 bytes (used 14% of a 32�256 byte maximum) (2,04 secs)
+Program LedTester size: 4660 bytes (used 14% of a 32256 byte maximum) (2,04 secs)
 Minimum Memory Usage: 331 bytes (16% of a 2048 byte maximum)
 
 
-Program LedTester size: 5�074 bytes (used 16% of a 32�256 byte maximum) (1,10 secs)
+Program LedTester size: 5074 bytes (used 16% of a 32256 byte maximum) (1,10 secs)
 Minimum Memory Usage: 331 bytes (16% of a 2048 byte maximum)
 
 lib + tinyp 2018.03.25
-Program LedTester size: 3�720 bytes (used 12% of a 32�256 byte maximum) (0,96 secs)
+Program LedTester size: 3720 bytes (used 12% of a 32256 byte maximum) (0,96 secs)
 Minimum Memory Usage: 219 bytes (11% of a 2048 byte maximum)
 
 lib nobuffer + tinyp 2018.04.15
-Program LedTester size: 5�478 bytes (used 17% of a 32�256 byte maximum) (1,06 secs)
+Program LedTester size: 5478 bytes (used 17% of a 32256 byte maximum) (1,06 secs)
 Minimum Memory Usage: 236 bytes (12% of a 2048 byte maximum)
 
 lib nobuffer + tinyp 2018.04.15
-Program LedTester size: 6�650 bytes (used 21% of a 32�256 byte maximum) (1,37 secs)
+Program LedTester size: 6650 bytes (used 21% of a 32256 byte maximum) (1,37 secs)
 Minimum Memory Usage: 238 bytes (12% of a 2048 byte maximum)
 
 lib nobuffer + print 2018.04.15
-Program LedTester size: 6�574 bytes (used 20% of a 32�256 byte maximum) (1,30 secs)
+Program LedTester size: 6574 bytes (used 20% of a 32256 byte maximum) (1,30 secs)
 Minimum Memory Usage: 244 bytes (12% of a 2048 byte maximum)
 
 lib nobuffer + tinyprint + softi2cmaster 2018.05.01
-Program LedTester size: 6 696 bytes (used 21% of a 32�256 byte maximum) (0,68 secs)
+Program LedTester size: 6 696 bytes (used 21% of a 32256 byte maximum) (0,68 secs)
 Minimum Memory Usage: 208 bytes (10% of a 2048 byte maximum)
 
 lib nobuffer + tinyprint + softi2cmaster (RMW mode) 2018.08.05
@@ -247,7 +250,11 @@ lib nobuffer + tinyprint + softi2cmaster (removed stray Serial.println) 2018.08.
 Program SH1106Test size: 5 578 bytes (used 17% of a 32 256 byte maximum) (4,34 secs)
 Minimum Memory Usage: 33 bytes (2% of a 2048 byte maximum)
 
-lib nobuffer + tinyprint + softi2cmaster (removed float operations) 2018.08.11
+lib nobuffer + tinyprint gutted included + softi2cmaster (removed float operations) 2018.08.11
 Program SH1106Test size: 3 572 bytes (used 11% of a 32 256 byte maximum) (1,69 secs)
+Minimum Memory Usage: 33 bytes (2% of a 2048 byte maximum)
+
+lib nobuffer + tinyprint new ver (everything off) + softi2cmaster (removed float operations) 2018.08.12
+Program SH1106Test size: 3 494 bytes (used 11% of a 32 256 byte maximum) (1,73 secs)
 Minimum Memory Usage: 33 bytes (2% of a 2048 byte maximum)
 */

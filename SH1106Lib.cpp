@@ -6,6 +6,8 @@
 	MIT license, all text above must be included in any redistribution
 ****************************************************/
 
+#include "config.h"
+
 #include "SH1106Lib.h"
 #include <SoftI2CMaster.h>
 
@@ -77,7 +79,7 @@ void SH1106Lib::initialize()
 	command: the command (byte) that needs to be sent to the device
 	startTransmission: should it start a new transmission? Set this to false if you already started a transmission
 */
-void SH1106Lib::sendCommand(byte command, bool useOwnTransmission = true)
+void SH1106Lib::sendCommand(byte command, bool useOwnTransmission/* = true*/)
 {
 	// I2C
 	_beginTransmission(I2CWRITE, useOwnTransmission);
@@ -95,7 +97,7 @@ void SH1106Lib::sendCommand(byte command, bool useOwnTransmission = true)
 	Sends a single byte of data to the display
 	data: the data (byte) that needs to be sent to the device
 */
-void SH1106Lib::sendData(byte data, bool useOwnTransmission = true)
+void SH1106Lib::sendData(byte data, bool useOwnTransmission/* = true*/)
 {
 	// I2C
 	_beginTransmission(I2CWRITE, useOwnTransmission);
@@ -109,36 +111,36 @@ void SH1106Lib::sendData(byte data, bool useOwnTransmission = true)
 	}
 }
 
-/*
-	Sends a batch of data to the display
-	data: the data array (bytes) that needs to be sent to the device
-	count: the number of items in the array
-*/
-void SH1106Lib::sendData(byte * data, uint8_t count, bool useOwnTransmission = true)
-{
-	// TODO what is up when count > SH1106_MAXSEGMENTSPERWRITE?
-
-	// I2C
-	_beginTransmission(I2CWRITE, useOwnTransmission);
-
-	i2c_write(SH1106_MESSAGETYPE_DATA); // This byte is DATA 
-	for (uint8_t k = 0; k < count; k++) {
-		i2c_write(data[k]);
-	}
-
-	if (useOwnTransmission)
-	{
-		_endTransmission();
-	}
-}
+///*
+//	Sends a batch of data to the display
+//	data: the data array (bytes) that needs to be sent to the device
+//	count: the number of items in the array
+//*/
+//void SH1106Lib::sendData(byte * data, uint8_t count, bool useOwnTransmission = true)
+//{
+//	// TODO what is up when count > SH1106_MAXSEGMENTSPERWRITE?
+//
+//	// I2C
+//	_beginTransmission(I2CWRITE, useOwnTransmission);
+//
+//	i2c_write(SH1106_MESSAGETYPE_DATA); // This byte is DATA 
+//	for (uint8_t k = 0; k < count; k++) {
+//		i2c_write(data[k]);
+//	}
+//
+//	if (useOwnTransmission)
+//	{
+//		_endTransmission();
+//	}
+//}
 
 /*
 	Clears the display
 */
 void SH1106Lib::clearDisplay(void)
 {
-	uint8_t page, segments;
-	byte buffer[16] = { 0x00 };
+	uint8_t page, segments, parts;
+	//byte buffer[16] = { 0x00 };
 
 	_beginTransmission(I2CWRITE, true);
 	// clear the buffer so we can fill the screen with zeroes
@@ -149,7 +151,11 @@ void SH1106Lib::clearDisplay(void)
 		for (segments = 0; segments < (SH1106_NUMBEROF_SEGMENTS / SH1106_MAXSEGMENTSPERWRITE); segments++)
 		{
 			// no need to set the draw position, as every memory write advances the write pos to the next one
-			sendData(buffer, SH1106_MAXSEGMENTSPERWRITE, false);
+			for (parts = 0; parts < SH1106_MAXSEGMENTSPERWRITE; parts++)
+			{
+				sendData(0x00, false);
+			}
+			//sendData(buffer, SH1106_MAXSEGMENTSPERWRITE, false);
 		}
 	}
 	_endTransmission();
@@ -207,12 +213,12 @@ void SH1106Lib::fillRect(uint8_t left, uint8_t top, uint8_t width, uint8_t heigh
 		height = SH1106_LCDHEIGHT - top - 1;
 	}
 
-	uint8_t i, j = 0;
+	uint8_t i = 0;
 	byte maskStart, maskEnd = B00000000;
 
 	// calculate the start and the end masks
 	maskStart = B11111111 << ((top % 8));
-	maskEnd = ~(B11111111 << ((top + height) % 8) + 1);
+	maskEnd = ~(B11111111 << (((top + height) % 8) + 1));
 
 	if (height <= 8 && (floor(top / 8) == floor((top + height) / 8)))
 	{ // smaller than a page, so combine the start and the end mask
@@ -285,7 +291,7 @@ void SH1106Lib::drawBitmap(uint8_t x, uint8_t y, const byte * bitmap, uint8_t w,
 				}
 				else
 				{ // this is the leftover - this only comes in play when the current part of the image crosses the page boundary
-					actualByte = actualByte >> 8 - diff;
+					actualByte = actualByte >> (8 - diff);
 				}
 				// display the column of pixels
 				_drawColumn(actualByte, color, backgroundType, B11111111);
@@ -340,7 +346,7 @@ void SH1106Lib::resetCursor()
 	offset: signed value to offset the position the character is found in the font
 	flags: set of flags describing the properties of the font
 */
-void SH1106Lib::setFont(const unsigned char *font, uint8_t width, uint8_t height, int8_t offset = 0, uint8_t flags = FONT_FULL)
+void SH1106Lib::setFont(const unsigned char *font, uint8_t width, uint8_t height, int8_t offset/* = 0*/, uint8_t flags/* = FONT_FULL*/)
 {
 	_font = font;
 	_fontWidth = width;
@@ -465,7 +471,7 @@ void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color,
 				}
 				else
 				{ // this is the leftover - this only comes in play when the current part of the image crosses the page boundary
-					actualByte = actualByte >> 8 - diff;
+					actualByte = actualByte >> (8 - diff);
 				}
 				// display the column of pixels
 				_drawColumn(actualByte, color, backgroundType, B11111111);
@@ -476,13 +482,14 @@ void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color,
 
 }
 
+
 /*
 	Draws a character on the screen from the font
 	x: the x coordinate
 	y: the y coordinate
 	startTransmission: should it start a new transmission? Set this to false if you already started a transmission
 */
-void SH1106Lib::_setDisplayWritePosition(uint8_t x, uint8_t y, bool useOwnTransmission = false)
+void SH1106Lib::_setDisplayWritePosition(uint8_t x, uint8_t y, bool useOwnTransmission/* = false*/)
 {
 	if (x == _pixelPosX && ((y >> 3) == _pixelPosY))
 	{ // should not try to set on the same position again
@@ -513,7 +520,7 @@ void SH1106Lib::_setDisplayWritePosition(uint8_t x, uint8_t y, bool useOwnTransm
 	}
 }
 
-void SH1106Lib::_beginTransmission(byte operation, bool startNewTransmission = false)
+void SH1106Lib::_beginTransmission(byte operation/* = I2CWRITE*/, bool startNewTransmission/* = false*/)
 {
 	if (_i2cTransmissionInProgress && !startNewTransmission)
 	{ // send a repeated start if there is no need to start a new one
@@ -562,7 +569,7 @@ void SH1106Lib::_stopRMWMode()
 	_endTransmission();
 }
 
-void SH1106Lib::_drawColumn(uint8_t data, uint8_t color, uint8_t backgroundType = TRANSPARENT, byte backgroundMask = B00000000)
+void SH1106Lib::_drawColumn(uint8_t data, uint8_t color, uint8_t backgroundType/* = TRANSPARENT*/, byte backgroundMask/* = B00000000*/)
 {
 	byte b = data;
 	// read the pixel data from the display
