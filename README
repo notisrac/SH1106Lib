@@ -1,11 +1,12 @@
 # No buffer SH1106 OLED display driver
-An Arduino library for the SH1106 OLED display, for the lower end of the Atmel AVR MCU range that has limited resources
+An Arduino library for the SH1106 OLED display, for the lower end of the Atmel AVR MCU range that has limited resources.
+The size is achieved by using libraries that are modular and are size conscious themselves, restricting the featuer list, and eliminating the buffer alltogether.
 
 
 ## FEATURES
  * no buffer
- * minimal RAM (33 bytes) and flash (4366 bytes) size
- * designed for small devices with limited resources ([Atmel AVR ATtiny family](https://en.wikipedia.org/wiki/Atmel_AVR_ATtiny_comparison_chart))
+ * minimal RAM (33 bytes) and flash (~2600 bytes) size
+ * designed for 8-bit AVR devices with limited resources ([see Supported Devices](#supported-devices1))
  * supports hardware and software I2C modes
 
 
@@ -15,10 +16,16 @@ You must install the following libraries:
  * https://github.com/notisrac/TinyPrint
  * This library :)
 
-_Follow this guide: https://www.arduino.cc/en/Guide/Libraries_
+_Follow this guide to install them: https://www.arduino.cc/en/Guide/Libraries_
 
 This is the minimal code required to make the library work:
 ```c++
+// first, we need to define the I2C pins for the softwareI2C lib
+#define SDA_PORT PORTC
+#define SDA_PIN 4 // = A4
+#define SCL_PORT PORTC
+#define SCL_PIN 5 // = A5
+
 #include "SH1106Lib.h"
 SH1106Lib display;
 
@@ -31,6 +38,19 @@ void loop() {
     // use display.
 }
 ```
+
+## CONFIG
+The bare minimum configuration you have to do is telling the SoftI2CMaster what pins to use:
+```c++
+#define SDA_PORT PORTC
+#define SDA_PIN 4 // = A4
+#define SCL_PORT PORTC
+#define SCL_PIN 5 // = A5
+```
+
+To confugre the underlying two other libraries, check their readmes:
+ - [SoftI2CMaster Configuration](https://github.com/felias-fogg/SoftI2CMaster#configuration)
+ - [TinyPrint Configuration](https://github.com/notisrac/TinyPrint#configuration)
 
 
 ## FUNCTIONS
@@ -109,16 +129,80 @@ For this you can use the [File to C style array converter](https://notisrac.gith
 _Note: all measurements are made on an Arduino UNO with I2C_FASTMODE on, I2C_HARDWARE, I2C_TIMEOUT = 10 and I2C_MAXWAIT = 10_
 
 ## Comparison
-U8g2 Page buffer mode (Picture Loop)
-Sketch uses 9156 bytes (28%) of program storage space. Maximum is 32256 bytes.
-Global variables use 581 bytes (28%) of dynamic memory, leaving 1467 bytes for local variables. Maximum is 2048 bytes.
+| Library                              | Prog storage (bytes) | Memory (bytes) | Device support               | Comment |
+|:-------------------------------------|:--------------------:|:--------------:|------------------------------|---------|
+| U8g2 Page buffer mode (Picture Loop) | 9156                 | 581            | Almost all of them           | Empty example sketch, with lib and init |
+| Adafruit_SH1106                      | 8726                 | 1299           | SH1106 OLED display only | Empty example sketch, init code. This is the Adafruit SSD1306 lib converted to SH1106 |
+| SH1106LIB (this lib)                 | 2452                 | 33             | SH1106 OLED display only | Empty example sketch, init code, HW I2C support off, tinyprint off |
+
+
+## SUPPORTED DEVICES
+Below is a list or AVRs that meet the criteria of running this library.
+_Please note the "Tested" column, whether a uc has been tested with the lib or not!_
+| Product     | Program Mem (KB) | SRAM (Bytes) |   Tested   | HW I2C |
+|-------------|-----------------:|-------------:|:----------:|:------:|
+| ATmega1284P | 128 | 16384 | NO | YES |
+| ATmega128A  | 128 | 4096 | NO | YES |
+| ATmega164PA | 16 | 1024 | NO | YES |
+| ATmega168PB | 16 | 1024 | NO | YES |
+| ATmega169PA | 16 | 1024 | NO | YES |
+| ATmega16A   | 16 | 1024 | NO | YES |
+| ATmega16U2  | 16 | 512 | NO | NO |
+| ATmega16U4 | 16 | 1256 | NO | YES |
+| ATmega2561 | 256 | 8192 | NO | YES |
+| ATMEGA3208 | 32 | 4096 | NO | YES |
+| ATMEGA3209 | 32 | 4096 | NO | YES |
+| ATmega324P | 32 | 2048 | NO | YES |
+| ATmega328P | 32 | 2048 | **YES** | YES |
+| ATmega32A | 32 | 2048 | NO | YES |
+| ATmega32U2 | 32 | 1024 | NO | NO |
+| ATmega32U4 | 32 | 2560 | NO | YES |
+| ATMEGA4808 | 48 | 6144 | NO | YES |
+| ATMEGA4809 | 48 | 6144 | NO | YES |
+| ATmega48A | 4 | 512 | NO | YES |
+| ATmega48P | 4 | 512 | NO | YES |
+| ATmega644PA | 64 | 4096 | NO | YES |
+| ATmega64A | 64 | 4096 | NO | YES |
+| ATmega88PA | 8 | 1024 | NO | YES |
+| ATmega8A | 8 | 1024 | NO | YES |
+| ATTINY1604 | 16 | 1024 | NO | YES |
+| ATTINY1606 | 16 | 1024 | NO | YES |
+| ATTINY1607 | 16 | 1024 | NO | YES |
+| ATTINY1614 | 16 | 2048 | NO | YES |
+| ATTINY1616 | 16 | 2048 | NO | YES |
+| ATTINY1617 | 16 | 2048 | NO | YES |
+| ATTINY3216 | 32 | 2048 | NO | YES |
+| ATTINY3217 | 32 | 2048 | NO | YES |
+| ATtiny40 | 4 | 256 | NO | YES |
+| ATTINY402 | 4 | 256 | NO | YES |
+| ATTINY404 | 4 | 256 | NO | YES |
+| ATTINY406 | 4 | 256 | NO | YES |
+| ATTINY412 | 4 | 256 | NO | YES |
+| ATTINY414 | 4 | 256 | NO | YES |
+| ATTINY416 | 4 | 256 | NO | YES |
+| ATTINY417 | 4 | 256 | NO | YES |
+| ATtiny44A | 4 | 256 | NO | YES |
+| ATtiny48 | 4 | 256 | NO | YES |
+| ATTINY804 | 8 | 512 | NO | YES |
+| ATTINY806 | 8 | 512 | NO | YES |
+| ATTINY807 | 8 | 512 | NO | YES |
+| ATTINY814 | 8 | 256 | NO | YES |
+| ATTINY816 | 8 | 512 | NO | YES |
+| ATTINY817 | 8 | 512 | NO | YES |
+| ATtiny84A | 8 | 512 | NO | YES |
+| ATtiny861A | 8 | 512 | NO | YES |
+| ATtiny88 | 8 | 512 | NO | YES |
+| ATxmega16A4U | 16 | 2048 | NO | YES |
+| ATxmega32D4 | 32 | 4096 | NO | YES |
+_Last updated: 2018.09.23_
+
 
 ## LINKS
  * https://playground.arduino.cc/Main/SoftwareI2CLibrary
  * https://github.com/notisrac/TinyPrint
 
 
-## Documentation
+## API
 
 ### `SH1106Lib()`
 The constructor
@@ -171,9 +255,6 @@ Draws a single pixel on th display
 Sets the text cursor to this position
  - x: the x coordinate
  - y: the y coordiante
-
-### `void resetCursor()`
-Resets the text cursor to 0,0
 
 ### `void setFont(const unsigned char *font, uint8_t width, uint8_t height, int8_t offset = 0, uint8_t flags = FONT_FULL)`
 Sets the font to write with
