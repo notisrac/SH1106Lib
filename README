@@ -1,17 +1,18 @@
 # No buffer SH1106 OLED display driver
-An Arduino library for the SH1106 OLED display, for the lower end of the Atmel AVR MCU range that has limited resources.
+An Arduino library for the SH1106 I2C OLED display, for the lower end of the Atmel AVR MCU range that has limited resources.
 The size is achieved by using libraries that are modular and are size conscious themselves, restricting the featuer list, and eliminating the buffer alltogether.
 
 
 ## FEATURES
- * no buffer
- * minimal RAM (33 bytes) and flash (~2600 bytes) size
- * designed for 8-bit AVR devices with limited resources ([see Supported Devices](#supported-devices1))
- * supports hardware and software I2C modes
+ * Absolutely **no buffer**
+ * Minimal RAM (33 bytes) and flash (~2300 bytes) requirement
+ * Designed for 8-bit AVR devices with limited resources ([see Supported Devices](#supported-devices))
+ * Supports hardware and software I2C modes
+ * Modular design: size will vary based on the features you enable
 
 
 ## GETTING STARTED
-You must install the following libraries:
+You must install the following libraries first:
  * https://playground.arduino.cc/Main/SoftwareI2CLibrary
  * https://github.com/notisrac/TinyPrint
  * This library :)
@@ -22,9 +23,9 @@ This is the minimal code required to make the library work:
 ```c++
 // first, we need to define the I2C pins for the softwareI2C lib
 #define SDA_PORT PORTC
-#define SDA_PIN 4 // = A4
+#define SDA_PIN 4 // = A4 on Arduino UNO
 #define SCL_PORT PORTC
-#define SCL_PIN 5 // = A5
+#define SCL_PIN 5 // = A5 on Arduino UNO
 
 #include "SH1106Lib.h"
 SH1106Lib display;
@@ -43,9 +44,9 @@ void loop() {
 The bare minimum configuration you have to do is telling the SoftI2CMaster what pins to use:
 ```c++
 #define SDA_PORT PORTC
-#define SDA_PIN 4 // = A4
+#define SDA_PIN 4
 #define SCL_PORT PORTC
-#define SCL_PIN 5 // = A5
+#define SCL_PIN 5
 ```
 
 To confugre the underlying two other libraries, check their readmes:
@@ -89,22 +90,25 @@ display.print(F("Hello world!"));
 
 ### Display a bitmap
 ```c++
-// need to include the font itself
-#define HEIGHT 5
-#define WIDTH 11
+// need to include the image itself
+// created with: https://notisrac.github.io/FileToCArray/
+#define BATTERY_HEIGHT 5
+#define BATTERY_WIDTH 11
 
-// it is a tiny battery
+// array size is 11
 static const byte battery[] PROGMEM  = {
-  B11111111, B10010000, 
-  B00011110, B00000010, 
-  B11000000, B01111111, 
-  B11111000
+  B00011111, B00010001, 
+  B00010001, B00010001, 
+  B00010001, B00010001, 
+  B00010001, B00010001, 
+  B00011111, B00001010, 
+  B00001110
 };
 
 ...
 
 // display the bitmap at 5, 3, in white, with transparent background
-display.drawBitmap(5, 3, battery, WIDTH, HEIGHT, WHITE, TRANSPARENT);
+display.drawBitmap(5, 3, battery, BATTERY_WIDTH, BATTERY_HEIGHT, WHITE, TRANSPARENT);
 ```
 
 
@@ -120,11 +124,12 @@ For this you can use the [File to C style array converter](https://notisrac.gith
 
 
 ## CONSIDERATIONS
- * Much slower than a bufferd lib like [U8g2](https://github.com/olikraus/u8g2)
+ * Much slower than a bufferd lib like the [U8g2](https://github.com/olikraus/u8g2)
  * Printing text that don't span the page boundary (aka y % 8 == 0) lines are about 50% faster
  * Displaying an image that don't span the page boundary (aka y % 8 == 0) lines are about 50% faster
  * Plotting individual pixels in large numbers is slow
  * If constanty updating a text/image on screen, if the design allows it, set the background to SOLID. This is much faster, than clearing the area with fillRect
+ * Keep in mind, that enabling functions, and adding your own code can increase the size of the binaries pretty fast. So if you can, choose a uc with at least 8k of program space, just to be on the safe side.
 
 _Note: all measurements are made on an Arduino UNO with I2C_FASTMODE on, I2C_HARDWARE, I2C_TIMEOUT = 10 and I2C_MAXWAIT = 10_
 
@@ -133,73 +138,63 @@ _Note: all measurements are made on an Arduino UNO with I2C_FASTMODE on, I2C_HAR
 |:-------------------------------------|:--------------------:|:--------------:|------------------------------|---------|
 | U8g2 Page buffer mode (Picture Loop) | 9156                 | 581            | Almost all of them           | Empty example sketch, with lib and init |
 | Adafruit_SH1106                      | 8726                 | 1299           | SH1106 OLED display only | Empty example sketch, init code. This is the Adafruit SSD1306 lib converted to SH1106 |
-| SH1106LIB (this lib)                 | 2452                 | 33             | SH1106 OLED display only | Empty example sketch, init code, HW I2C support off, tinyprint off |
+| SH1106LIB (this lib)                 | 2312                 | 33             | SH1106 OLED display only | Empty example sketch, init code, HW I2C support off, tinyprint off |
 
 
 ## SUPPORTED DEVICES
-Below is a list or AVRs that meet the criteria of running this library.
-_Please note the "Tested" column, whether a uc has been tested with the lib or not!_
-| Product     | Program Mem (KB) | SRAM (Bytes) |   Tested   | HW I2C |
-|-------------|-----------------:|-------------:|:----------:|:------:|
-| ATmega1284P | 128 | 16384 | NO | YES |
-| ATmega128A  | 128 | 4096 | NO | YES |
-| ATmega164PA | 16 | 1024 | NO | YES |
-| ATmega168PB | 16 | 1024 | NO | YES |
-| ATmega169PA | 16 | 1024 | NO | YES |
-| ATmega16A   | 16 | 1024 | NO | YES |
-| ATmega16U2  | 16 | 512 | NO | NO |
-| ATmega16U4 | 16 | 1256 | NO | YES |
-| ATmega2561 | 256 | 8192 | NO | YES |
-| ATMEGA3208 | 32 | 4096 | NO | YES |
-| ATMEGA3209 | 32 | 4096 | NO | YES |
-| ATmega324P | 32 | 2048 | NO | YES |
-| ATmega328P | 32 | 2048 | **YES** | YES |
-| ATmega32A | 32 | 2048 | NO | YES |
-| ATmega32U2 | 32 | 1024 | NO | NO |
-| ATmega32U4 | 32 | 2560 | NO | YES |
-| ATMEGA4808 | 48 | 6144 | NO | YES |
-| ATMEGA4809 | 48 | 6144 | NO | YES |
-| ATmega48A | 4 | 512 | NO | YES |
-| ATmega48P | 4 | 512 | NO | YES |
-| ATmega644PA | 64 | 4096 | NO | YES |
-| ATmega64A | 64 | 4096 | NO | YES |
-| ATmega88PA | 8 | 1024 | NO | YES |
-| ATmega8A | 8 | 1024 | NO | YES |
-| ATTINY1604 | 16 | 1024 | NO | YES |
-| ATTINY1606 | 16 | 1024 | NO | YES |
-| ATTINY1607 | 16 | 1024 | NO | YES |
-| ATTINY1614 | 16 | 2048 | NO | YES |
-| ATTINY1616 | 16 | 2048 | NO | YES |
-| ATTINY1617 | 16 | 2048 | NO | YES |
-| ATTINY3216 | 32 | 2048 | NO | YES |
-| ATTINY3217 | 32 | 2048 | NO | YES |
-| ATtiny40 | 4 | 256 | NO | YES |
-| ATTINY402 | 4 | 256 | NO | YES |
-| ATTINY404 | 4 | 256 | NO | YES |
-| ATTINY406 | 4 | 256 | NO | YES |
-| ATTINY412 | 4 | 256 | NO | YES |
-| ATTINY414 | 4 | 256 | NO | YES |
-| ATTINY416 | 4 | 256 | NO | YES |
-| ATTINY417 | 4 | 256 | NO | YES |
-| ATtiny44A | 4 | 256 | NO | YES |
-| ATtiny48 | 4 | 256 | NO | YES |
-| ATTINY804 | 8 | 512 | NO | YES |
-| ATTINY806 | 8 | 512 | NO | YES |
-| ATTINY807 | 8 | 512 | NO | YES |
-| ATTINY814 | 8 | 256 | NO | YES |
-| ATTINY816 | 8 | 512 | NO | YES |
-| ATTINY817 | 8 | 512 | NO | YES |
-| ATtiny84A | 8 | 512 | NO | YES |
-| ATtiny861A | 8 | 512 | NO | YES |
-| ATtiny88 | 8 | 512 | NO | YES |
-| ATxmega16A4U | 16 | 2048 | NO | YES |
-| ATxmega32D4 | 32 | 4096 | NO | YES |
-_Last updated: 2018.09.23_
-
-
-## LINKS
- * https://playground.arduino.cc/Main/SoftwareI2CLibrary
- * https://github.com/notisrac/TinyPrint
+Below is a list or AVRs that meet the criteria of running this library - based on their flash and the sram sizes! (4 < flash <= 32 or 64 < sram <= 1024)
+_Please see the "Tested" column, whether a uc has been tested with the lib or not!_
+| Product     | Program Mem (KB) | SRAM (Bytes) | HW I2C | Tested | Comment |
+|-------------|-----------------:|-------------:|:------:|:------:|---------|
+| [ATmega328](https://www.microchip.com/wwwproducts/en/ATmega328) | 32 | 2048 | 1 | YES | Arduino UNO, I2C_HARDWARE on/off, I2C_FASTMODE on/off | 
+| [ATmega16](https://www.microchip.com/wwwproducts/en/ATmega16) | 16 | 1024 | 1 | no |  |
+| [ATmega164](https://www.microchip.com/wwwproducts/en/ATmega164A) | 16 | 1024 | 1 | no |  | 
+| [ATmega168](https://www.microchip.com/wwwproducts/en/ATmega168) | 16 | 1024 | 1 | no |  |
+| [ATmega169](https://www.microchip.com/wwwproducts/en/ATmega169A) | 16 | 1024 | 1 | no |  |
+| [ATmega16A](https://www.microchip.com/wwwproducts/en/ATmega16A) | 16 | 1024 | 1 | no |  |
+| [ATmega16M1](https://www.microchip.com/wwwproducts/en/ATmega16M1) | 16 | 1024 | 0 | no |  |
+| [ATmega16U2](https://www.microchip.com/wwwproducts/en/ATmega16U2) | 16 | 512 | 0 | no |  |
+| [ATmega16U4](https://www.microchip.com/wwwproducts/en/ATmega16U4) | 16 | 1256 | 1 | no |  |
+| [ATmega32U2](https://www.microchip.com/wwwproducts/en/ATmega32U2) | 32 | 1024 | 0 | no |  |
+| [ATmega48](https://www.microchip.com/wwwproducts/en/ATmega48) | 4 | 512 | 1 | no |  |
+| [ATmega48](https://www.microchip.com/wwwproducts/en/ATmega48A) | 4 | 512 | 1 | no |  |
+| [ATmega8](https://www.microchip.com/wwwproducts/en/ATmega8) | 8 | 1024 | 1 | no |  |
+| [ATmega88](https://www.microchip.com/wwwproducts/en/ATmega88) | 8 | 1024 | 1 | no |  |
+| [ATmega8A](https://www.microchip.com/wwwproducts/en/ATmega8A) | 8 | 1024 | 1 | no |  |
+| [ATmega8U2](https://www.microchip.com/wwwproducts/en/ATmega8U2) | 8 | 512 | 0 | no |  |
+| [ATTINY1607](https://www.microchip.com/wwwproducts/en/ATTINY1607) | 16 | 1024 | 1 | no |  |
+| [ATtiny1634](https://www.microchip.com/wwwproducts/en/ATtiny1634) | 16 | 1024 | 1 | no |  |
+| [ATtiny167](https://www.microchip.com/wwwproducts/en/ATtiny167) | 16 | 512 | 1 | no |  |
+| [ATtiny40](https://www.microchip.com/wwwproducts/en/ATtiny40) | 4 | 256 | 1 | no |  |
+| [ATTINY402](https://www.microchip.com/wwwproducts/en/ATTINY402) | 4 | 256 | 1 | no |  |
+| [ATTINY404](https://www.microchip.com/wwwproducts/en/ATTINY404) | 4 | 256 | 1 | no |  |
+| [ATTINY406](https://www.microchip.com/wwwproducts/en/ATTINY406) | 4 | 256 | 1 | no |  |
+| [ATTINY412](https://www.microchip.com/wwwproducts/en/ATTINY412) | 4 | 256 | 1 | no |  |
+| [ATTINY414](https://www.microchip.com/wwwproducts/en/ATTINY414) | 4 | 256 | 1 | no |  |
+| [ATTINY416](https://www.microchip.com/wwwproducts/en/ATTINY416) | 4 | 256 | 1 | no |  |
+| [ATTINY417](https://www.microchip.com/wwwproducts/en/ATTINY417) | 4 | 256 | 1 | no |  |
+| [ATtiny4313](https://www.microchip.com/wwwproducts/en/ATtiny4313) | 4 | 256 | 1 | no |  |
+| [ATtiny43U](https://www.microchip.com/wwwproducts/en/ATtiny43U) | 4 | 256 | 1 | no |  |
+| [ATtiny44](https://www.microchip.com/wwwproducts/en/ATtiny44) | 4 | 256 | 1 | no |  |
+| [ATtiny441](https://www.microchip.com/wwwproducts/en/ATtiny441) | 4 | 256 | 1 | no |  |
+| [ATtiny44A](https://www.microchip.com/wwwproducts/en/ATtiny44A) | 4 | 256 | 1 | no |  |
+| [ATtiny45](https://www.microchip.com/wwwproducts/en/ATtiny45) | 4 | 256 | 1??? | YES | I2C_HARDWARE off, works with the 1MHz internal clock too |
+| [ATtiny461](https://www.microchip.com/wwwproducts/en/ATtiny461) | 4 | 256 | 1 | no |  |
+| [ATtiny48](https://www.microchip.com/wwwproducts/en/ATtiny48) | 4 | 256 | 1 | no |  |
+| [ATTINY807](https://www.microchip.com/wwwproducts/en/ATTINY807) | 8 | 512 | 1 | no |  |
+| [ATTINY814](https://www.microchip.com/wwwproducts/en/ATTINY814) | 8 | 256 | 1 | no |  |
+| [ATTINY816](https://www.microchip.com/wwwproducts/en/ATTINY816) | 8 | 512 | 1 | no |  |
+| [ATTINY817](https://www.microchip.com/wwwproducts/en/ATTINY817) | 8 | 512 | 1 | no |  |
+| [ATtiny828](https://www.microchip.com/wwwproducts/en/ATtiny828) | 8 | 512 | 1 | no |  |
+| [ATtiny84](https://www.microchip.com/wwwproducts/en/ATtiny84) | 8 | 512 | 1 | no |  |
+| [ATtiny841](https://www.microchip.com/wwwproducts/en/ATtiny841) | 8 | 512 | 1 | no |  |
+| [ATtiny84A](https://www.microchip.com/wwwproducts/en/ATtiny84A) | 8 | 512 | 1??? | YES | I2C_HARDWARE off, works with the 1MHz internal clock too |
+| [ATtiny85](https://www.microchip.com/wwwproducts/en/ATtiny85) | 8 | 512 | 1 | no |  |
+| [ATtiny861](https://www.microchip.com/wwwproducts/en/ATtiny861) | 8 | 512 | 1 | no |  |
+| [ATtiny87](https://www.microchip.com/wwwproducts/en/ATtiny87) | 8 | 512 | 1 | no |  |
+| [ATtiny88](https://www.microchip.com/wwwproducts/en/ATtiny88) | 8 | 512 | 1 | no |  |
+| [ATxmega8E5](https://www.microchip.com/wwwproducts/en/ATxmega8E5) | 8 | 1024 | 1 | no |  |
+ _Last updated: 2018.09.23_
 
 
 ## API
@@ -210,19 +205,13 @@ The constructor
 ### `void initialize()`
 Initializes the display
 
-### `void sendCommand(byte c, bool useOwnTransmission = true)`
+### `void sendCommand(byte c)`
 Sends a single command to the display
  - command: the command (byte) that needs to be sent to the device
- - startTransmission: should it start a new transmission? Set this to false if you already started a transmission
 
-### `void sendData(byte data, bool useOwnTransmission = true)`
+### `void sendData(byte data)`
 Sends a single byte of data to the display
  - data: the data (byte) that needs to be sent to the device
-
-### `void sendData(byte *data, uint8_t count, bool useOwnTransmission = true)`
-Sends a batch of data to the display
- - data: the data array (bytes) that needs to be sent to the device
- - count: the number of items in the array
 
 ### `void clearDisplay(void)`
 Clears the display
@@ -320,6 +309,11 @@ FONT_NUMBERS
 // this is a font, that has numbers and upper case characters, but no lowercase or space character
 FONT_NUMBERS | FONT_UPPERCASECHARS
 ```
+
+
+## LINKS
+ * https://playground.arduino.cc/Main/SoftwareI2CLibrary
+ * https://github.com/notisrac/TinyPrint
 
 
 ## TASKS

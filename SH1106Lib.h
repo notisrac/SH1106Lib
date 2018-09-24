@@ -584,20 +584,20 @@ void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color,
 	uint8_t byteHeight = intCeil(_fontHeight, 8) /*ceil(_fontHeight / 8.0)*/;
 
 	// try to mod the character, if the font does not have the required case
-	if (isLowerCase(character))
-	{
-		if ((_fontFlags & FONT_LOWERCASECHARS) != FONT_LOWERCASECHARS)
-		{
-			character = toUpperCase(character);
-		}
-	}
-	else
-	{
-		if ((_fontFlags & FONT_UPPERCASECHARS) != FONT_UPPERCASECHARS)
-		{
-			character = toLowerCase(character);
-		}
-	}
+	//if (isLowerCase(character))
+	//{
+	//	if ((_fontFlags & FONT_LOWERCASECHARS) != FONT_LOWERCASECHARS)
+	//	{
+	//		character = toUpperCase(character);
+	//	}
+	//}
+	//else
+	//{
+	//	if ((_fontFlags & FONT_UPPERCASECHARS) != FONT_UPPERCASECHARS)
+	//	{
+	//		character = toLowerCase(character);
+	//	}
+	//}
 
 
 	// height / 8, because we will plot in columns with the height of 8
