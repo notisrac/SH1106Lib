@@ -1,4 +1,6 @@
-// Created with: https://notisrac.github.io/FileToCArray/
+/*
+ * Created with: https://notisrac.github.io/FileToCArray/
+ */
 #define IMAGE_HEIGHT 60
 #define IMAGE_WIDTH 48
 

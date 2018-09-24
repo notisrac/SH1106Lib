@@ -33,13 +33,14 @@ SH1106Lib display;
 void setup() {
 	display.initialize();
 	display.clearDisplay();
+
+	display.setFont(font, 5, 7);
+	display.setTextWrap(true);
+	display.setTextColor(WHITE, BLACK);
 }
 
 void loop() {
-	display.setFont(font, 5, 7);
 	display.setCursor(0, 0);
-	display.setTextWrap(true);
-	display.setTextColor(WHITE, BLACK);
 	display.print(F("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip..."));
 
 	delay(1000);
