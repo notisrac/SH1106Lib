@@ -23,8 +23,8 @@
 // region display_constants
 #define SH1106_I2C_ADDRESS   0x3C // 011110+SA0+RW - 0x3C or 0x3D
 
-#define SH1106_LCDWIDTH                  128
-#define SH1106_LCDHEIGHT                 64
+#define SH1106_LCDWIDTH 128
+#define SH1106_LCDHEIGHT 64
 
 #define SH1106_SETCONTRAST 0x81
 #define SH1106_DISPLAYALLON_RESUME 0xA4
@@ -195,7 +195,7 @@ Initializes the display
 void SH1106Lib::initialize()
 {
 	if (!i2c_init()) { // Initialize everything and check for bus lockup
-					   //Serial.println("I2C init failed");
+		//Serial.println("I2C init failed");
 	}
 
 
@@ -212,7 +212,7 @@ void SH1106Lib::initialize()
 
 	sendCommand(SH1106_SETSTARTLINE | 0x0);            // line #0 0x40
 	sendCommand(SH1106_CHARGEPUMP);                    // 0x8D
-													   // SH1106_EXTERNALVCC
+	// SH1106_EXTERNALVCC
 	sendCommand(0x10);
 	sendCommand(SH1106_MEMORYMODE);                    // 0x20
 	sendCommand(0x00);                                  // 0x0 act like ks0108
@@ -221,22 +221,22 @@ void SH1106Lib::initialize()
 	sendCommand(SH1106_SETCOMPINS);                    // 0xDA
 	sendCommand(0x12);
 	sendCommand(SH1106_SETCONTRAST);                   // 0x81
-													   // SH1106_EXTERNALVCC
+	// SH1106_EXTERNALVCC
 	sendCommand(0x9F);
 	sendCommand(SH1106_SETPRECHARGE);                  // 0xd9
-													   // SH1106_EXTERNALVCC
+	// SH1106_EXTERNALVCC
 	sendCommand(0x22);
 	sendCommand(SH1106_SETVCOMDETECT);                 // 0xDB
 	sendCommand(0x40);
 	sendCommand(SH1106_DISPLAYALLON_RESUME);           // 0xA4
 	sendCommand(SH1106_NORMALDISPLAY);                 // 0xA6
 
-	sendCommand(SH1106_DISPLAYON);//--turn on oled panel
+	sendCommand(SH1106_DISPLAYON); //--turn on oled panel
 
-								  // ?????
+	// ?????
 	sendCommand(SH1106_SETCOLUMNADDRLOW | 0x0);  // low col = 0
 	sendCommand(SH1106_SETCOLUMNADDRHIGH | 0x0);  // hi col = 0
-												  // TODO can this be moved to begin???
+
 	sendCommand(SH1106_SETSTARTLINE | 0x0); // line #0
 
 	_endTransmission();
@@ -245,7 +245,6 @@ void SH1106Lib::initialize()
 /*
 Sends a single command to the display
 command: the command (byte) that needs to be sent to the device
-startTransmission: should it start a new transmission? Set this to false if you already started a transmission
 */
 void SH1106Lib::sendCommand(byte command)
 {
@@ -279,28 +278,6 @@ void SH1106Lib::sendData(byte data)
 	//}
 }
 
-///*
-//	Sends a batch of data to the display
-//	data: the data array (bytes) that needs to be sent to the device
-//	count: the number of items in the array
-//*/
-//void SH1106Lib::sendData(byte * data, uint8_t count, bool useOwnTransmission = true)
-//{
-//	// TODO what is up when count > SH1106_MAXSEGMENTSPERWRITE?
-//
-//	// I2C
-//	_beginTransmission(I2CWRITE, useOwnTransmission);
-//
-//	i2c_write(SH1106_MESSAGETYPE_DATA); // This byte is DATA 
-//	for (uint8_t k = 0; k < count; k++) {
-//		i2c_write(data[k]);
-//	}
-//
-//	if (useOwnTransmission)
-//	{
-//		_endTransmission();
-//	}
-//}
 
 /*
 Clears the display
@@ -646,7 +623,6 @@ void SH1106Lib::drawChar(uint8_t x, uint8_t y, uint8_t character, uint8_t color,
 Draws a character on the screen from the font
 x: the x coordinate
 y: the y coordinate
-startTransmission: should it start a new transmission? Set this to false if you already started a transmission
 */
 void SH1106Lib::_setDisplayWritePosition(uint8_t x, uint8_t y)
 {
@@ -766,73 +742,3 @@ void SH1106Lib::_drawColumns(uint8_t x, uint8_t y, uint8_t data, uint8_t count, 
 
 
 #endif // _SH1106LIB_H
-
-/*
-Empty arduino sketch ("bare minimum")
-Sketch uses 444 bytes (1%) of program storage space. Maximum is 32256 bytes.
-Global variables use 9 bytes (0%) of dynamic memory, leaving 2039 bytes for local variables. Maximum is 2048 bytes.
-
-
-Empty:
-Program LedTester size: 4544 bytes (used 14% of a 32256 byte maximum) (1,05 secs)
-Minimum Memory Usage: 317 bytes (15% of a 2048 byte maximum)
-
-D
-Program LedTester size: 4604 bytes (used 14% of a 32256 byte maximum) (1,08 secs)
-Minimum Memory Usage: 333 bytes (16% of a 2048 byte maximum)
-
-Program LedTester size: 4680 bytes (used 15% of a 32256 byte maximum) (1,13 secs)
-Minimum Memory Usage: 327 bytes (16% of a 2048 byte maximum)
-
-D : TP
-Program LedTester size: 4746 bytes (used 15% of a 32256 byte maximum) (1,19 secs)
-Minimum Memory Usage: 327 bytes (16% of a 2048 byte maximum)
-
-D : P
-Program LedTester size: 4668 bytes (used 14% of a 32256 byte maximum) (1,13 secs)
-Minimum Memory Usage: 3	7 bytes (16% of a 2048 byte maximum)
-
-lib + tinyp
-Program LedTester size: 4660 bytes (used 14% of a 32256 byte maximum) (2,04 secs)
-Minimum Memory Usage: 331 bytes (16% of a 2048 byte maximum)
-
-
-Program LedTester size: 5074 bytes (used 16% of a 32256 byte maximum) (1,10 secs)
-Minimum Memory Usage: 331 bytes (16% of a 2048 byte maximum)
-
-lib + tinyp 2018.03.25
-Program LedTester size: 3720 bytes (used 12% of a 32256 byte maximum) (0,96 secs)
-Minimum Memory Usage: 219 bytes (11% of a 2048 byte maximum)
-
-lib nobuffer + tinyp 2018.04.15
-Program LedTester size: 5478 bytes (used 17% of a 32256 byte maximum) (1,06 secs)
-Minimum Memory Usage: 236 bytes (12% of a 2048 byte maximum)
-
-lib nobuffer + tinyp 2018.04.15
-Program LedTester size: 6650 bytes (used 21% of a 32256 byte maximum) (1,37 secs)
-Minimum Memory Usage: 238 bytes (12% of a 2048 byte maximum)
-
-lib nobuffer + print 2018.04.15
-Program LedTester size: 6574 bytes (used 20% of a 32256 byte maximum) (1,30 secs)
-Minimum Memory Usage: 244 bytes (12% of a 2048 byte maximum)
-
-lib nobuffer + tinyprint + softi2cmaster 2018.05.01
-Program LedTester size: 6 696 bytes (used 21% of a 32256 byte maximum) (0,68 secs)
-Minimum Memory Usage: 208 bytes (10% of a 2048 byte maximum)
-
-lib nobuffer + tinyprint + softi2cmaster (RMW mode) 2018.08.05
-Program SH1106Test size: 5 316 bytes (used 16% of a 32 256 byte maximum) (3,64 secs)
-Minimum Memory Usage: 210 bytes (10% of a 2048 byte maximum)
-
-lib nobuffer + tinyprint + softi2cmaster (removed stray Serial.println) 2018.08.05
-Program SH1106Test size: 5 578 bytes (used 17% of a 32 256 byte maximum) (4,34 secs)
-Minimum Memory Usage: 33 bytes (2% of a 2048 byte maximum)
-
-lib nobuffer + tinyprint gutted included + softi2cmaster (removed float operations) 2018.08.11
-Program SH1106Test size: 3 572 bytes (used 11% of a 32 256 byte maximum) (1,69 secs)
-Minimum Memory Usage: 33 bytes (2% of a 2048 byte maximum)
-
-lib nobuffer + tinyprint new ver (everything off) + softi2cmaster (removed float operations) 2018.08.12
-Program SH1106Test size: 3 494 bytes (used 11% of a 32 256 byte maximum) (1,73 secs)
-Minimum Memory Usage: 33 bytes (2% of a 2048 byte maximum)
-*/
