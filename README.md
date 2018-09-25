@@ -145,7 +145,7 @@ _Note: all measurements are made on an Arduino UNO with I2C_FASTMODE on, I2C_HAR
 Below is a list or AVRs that meet the criteria of running this library - based on their flash and the sram sizes! (4 < flash <= 32 or 64 < sram <= 1024)
 _Please see the "Tested" column, whether a uc has been tested with the lib or not!_
 | Product     | Program Mem (KB) | SRAM (Bytes) | HW I2C | Tested | Comment |
-|-------------|-----------------:|-------------:|:------:|:------:|---------|
+|:------------|-----------------:|-------------:|:------:|:------:|---------|
 | [ATmega328](https://www.microchip.com/wwwproducts/en/ATmega328) | 32 | 2048 | 1 | YES | Arduino UNO, I2C_HARDWARE on/off, I2C_FASTMODE on/off | 
 | [ATmega16](https://www.microchip.com/wwwproducts/en/ATmega16) | 16 | 1024 | 1 | no |  |
 | [ATmega164](https://www.microchip.com/wwwproducts/en/ATmega164A) | 16 | 1024 | 1 | no |  | 
